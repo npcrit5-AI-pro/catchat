@@ -38,20 +38,24 @@ async function restore(){
  }
  console.error("Could not read the Supabase backup. Stopping so an empty database never overwrites it.");process.exit(1);
 }
-let saveTimer=null,saving=false,again=false;
+let saveTimer=null,saving=false,again=false,ready=false,lastSnap=0;
 async function save(){
- if(!SB_ON)return;if(saving){again=true;return}
+ if(!SB_ON||!ready)return;if(saving){again=true;return}
  saving=true;
- try{do{again=false;const r=await sb("POST","backup?on_conflict=id",{id:1,data:dump()});if(!r.ok)throw new Error(r.status+" "+await r.text())}while(again)}
+ try{do{again=false;const data=dump();const r=await sb("POST","backup?on_conflict=id",{id:1,data});if(!r.ok)throw new Error(r.status+" "+await r.text());
+  // older safety copies: one of 7 daily slots (ids 10-16), at most every 6 hours, never an empty-looking database
+  if(Date.now()-lastSnap>216e5&&data.players.length>1){const r2=await sb("POST","backup?on_conflict=id",{id:10+Math.floor(Date.now()/864e5)%7,data});if(r2.ok)lastSnap=Date.now()}
+ }while(again)}
  catch(e){console.error("Backup failed:",e.message);setTimeout(scheduleSave,10000)}
  finally{saving=false}
 }
 function scheduleSave(){if(!SB_ON||saveTimer)return;saveTimer=setTimeout(()=>{saveTimer=null;save()},2000)}
-const bye=async()=>{clearTimeout(saveTimer);saveTimer=null;await save();process.exit(0)};
+const bye=async()=>{clearTimeout(saveTimer);saveTimer=null;if(ready)await save();process.exit(0)};
 process.on("SIGTERM",bye);process.on("SIGINT",bye);
 
 (async()=>{
 await restore();
+ready=true; // saving is only allowed once the backup has been loaded
 const hashPw=(pw,salt)=>crypto.scryptSync(pw,salt,32).toString("hex");
 const same=(a,b)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y)};
 class E extends Error{}
