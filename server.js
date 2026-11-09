@@ -56,6 +56,7 @@ process.on("SIGTERM",bye);process.on("SIGINT",bye);
 (async()=>{
 await restore();
 ready=true; // saving is only allowed once the backup has been loaded
+q("DELETE FROM messages WHERE sys=1").run(); // in-game action logs were removed; clear any old ones
 const hashPw=(pw,salt)=>crypto.scryptSync(pw,salt,32).toString("hex");
 const same=(a,b)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y)};
 class E extends Error{}
@@ -111,14 +112,14 @@ const actions={
  pay(p,b){const t=find(b.to),n=parseInt(b.amt);
   if(!t||t.banned||t.id===p.id)bad("Pick another player by name");if(!(n>0))bad("Enter an amount");
   if(!inf(p)){if(p.coins<n)bad("You don’t have that many coins");q("UPDATE players SET coins=coins-? WHERE id=?").run(n,p.id)}
-  q("UPDATE players SET coins=coins+? WHERE id=?").run(n,t.id);post(p.name,`${p.name} sent ${n} coins to ${t.name}`)},
+  q("UPDATE players SET coins=coins+? WHERE id=?").run(n,t.id);},
  daily(p){if(Date.now()-p.daily<864e5)bad("Daily bonus isn’t ready yet");q("UPDATE players SET coins=coins+50,daily=? WHERE id=?").run(Date.now(),p.id)},
  buy(p,b){const i=q("SELECT * FROM items WHERE id=?").get(parseInt(b.id));
   if(!i)bad("That item is gone");if(i.stock===0)bad("Sold out");if(!inf(p)&&p.coins<i.price)bad("Not enough coins");
   const inv=JSON.parse(p.inv);inv[i.id]=(inv[i.id]||0)+1;
   q("UPDATE players SET coins=coins-?,inv=? WHERE id=?").run(inf(p)?0:i.price,JSON.stringify(inv),p.id);
   if(i.stock>0)q("UPDATE items SET stock=stock-1 WHERE id=?").run(i.id);
-  post(p.name,`${p.name} bought ${i.emoji} ${i.name}${i.kind==="physical"?" (a real one!)":""}`)},
+  },
  avatar(p,b){
   const a={mode:b.mode==="photo"?"photo":"cat",fur:clamp(b.fur,8),eyes:clamp(b.eyes,5),pat:clamp(b.pat,4),acc:clamp(b.acc,5)};
   let photo=p.photo,pv=p.pv;
@@ -133,27 +134,27 @@ const actions={
   const got=Math.floor(i.price*0.7);
   q("UPDATE players SET coins=coins+?,inv=? WHERE id=?").run(got,JSON.stringify(inv),p.id);
   if(i.stock>=0)q("UPDATE items SET stock=stock+1 WHERE id=?").run(i.id);
-  post(p.name,`${p.name} sold a ${i.emoji} ${i.name} for ${got} coins`)},
+  },
  discard(p,b){const i=q("SELECT * FROM items WHERE id=?").get(parseInt(b.id));
   if(!i||i.kind!=="fun")bad("You can only get rid of fun items");
   const inv=JSON.parse(p.inv);if(!inv[i.id])bad("You don’t have that");
   if(--inv[i.id]<=0)delete inv[i.id];
-  q("UPDATE players SET inv=? WHERE id=?").run(JSON.stringify(inv),p.id);post(p.name,`${p.name} got rid of a ${i.emoji} ${i.name}`)},
+  q("UPDATE players SET inv=? WHERE id=?").run(JSON.stringify(inv),p.id);},
  infinite(p,b){root(p);q("UPDATE players SET infinite=? WHERE id=?").run(b.on?1:0,p.id)},
  "item/add"(p,b){adm(p);const name=String(b.name||"").trim().slice(0,40);if(!name)bad("Give the item a name");
   const st=parseInt(b.stock);
   q("INSERT INTO items(name,emoji,descr,price,stock,kind) VALUES(?,?,?,?,?,?)").run(name,String(b.emoji||"").trim().slice(0,4)||"🎁",String(b.desc||"").trim().slice(0,80),Math.max(1,parseInt(b.price)||1),st>0?st:-1,["physical","fun"].includes(b.kind)?b.kind:"normal")},
  "item/remove"(p,b){adm(p);q("DELETE FROM items WHERE id=?").run(parseInt(b.id))},
  "admin/promote"(p,b){adm(p);const t=find(b.to);if(!t||t.id===ROOT)bad("You can’t change that player");
-  q("UPDATE players SET admin=? WHERE id=?").run(t.admin?0:1,t.id);post(p.name,`${t.name} ${t.admin?"is no longer":"is now"} an admin`)},
+  q("UPDATE players SET admin=? WHERE id=?").run(t.admin?0:1,t.id);},
  "admin/give"(p,b){root(p);const t=find(b.to),n=parseInt(b.n);if(!t||!n)bad("Pick a player and an amount");
   q("UPDATE players SET coins=MAX(0,coins+?) WHERE id=?").run(n,t.id)},
  "admin/ban"(p,b){root(p);const t=find(b.to);if(!t||t.id===ROOT)bad("You can’t ban that player");
-  q("INSERT OR IGNORE INTO blocked(id) VALUES(?)").run(t.id);wipe(t.id);post(p.name,`${t.name} was banned`);return{kick:t.id,reason:"banned"}},
- "admin/unban"(p,b){root(p);const id=String(b.to||"").toLowerCase();q("DELETE FROM blocked WHERE id=?").run(id);post(p.name,`${id} can sign up again`)},
+  q("INSERT OR IGNORE INTO blocked(id) VALUES(?)").run(t.id);wipe(t.id);;return{kick:t.id,reason:"banned"}},
+ "admin/unban"(p,b){root(p);const id=String(b.to||"").toLowerCase();q("DELETE FROM blocked WHERE id=?").run(id);},
  deleteMe(p,b){if(p.id===ROOT)bad("The admin account can’t be deleted");
   if(!same(hashPw(String(b.pw||""),p.salt),p.hash))bad("Wrong password");
-  wipe(p.id);post("CatChat",`${p.name} deleted their account`);return{kick:p.id,reason:"deleted"}},
+  wipe(p.id);;return{kick:p.id,reason:"deleted"}},
  "admin/delmsg"(p,b){adm(p);q("DELETE FROM messages WHERE id=?").run(parseInt(b.id))},
  "admin/clear"(p){adm(p);q("DELETE FROM messages").run()},
 };
