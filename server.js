@@ -221,6 +221,3 @@ http.createServer(async(req,res)=>{
 }).listen(PORT,"0.0.0.0",()=>console.log("CatChat listening on "+PORT));
 scheduleSave();
 })().catch(e=>{console.error(e);process.exit(1)});
-  console.error(e);J(res,500,{error:"Server error"});
- }
-}).listen(PORT,"0.0.0.0",()=>console.log("CatChat listening on "+PORT));
