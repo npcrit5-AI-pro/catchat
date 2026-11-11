@@ -3,136 +3,248 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0e8">
 <title>CatChat</title>
+<script>
+try{var t=localStorage.getItem("meow-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}
+</script>
 <style>
-:root{--bg:#f5f2ff;--panel:#fff;--ink:#1d1a33;--mute:#6b678a;--line:#e0dbf5;--coin:#e8a400;--accent:#0f9d73;--danger:#d64550;--me:#e6e0ff;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
-:root:not([data-theme="light"]){}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--danger:#ff7b84;--me:#2a2f66;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--danger:#ff7b84;--me:#2a2f66;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+:root{--bg:#f4f0e8;--bg2:#efe8dc;--panel:#fffdf8;--ink:#1c1915;--mute:#6f675c;--line:#e4dccf;--coin:#b86e00;--accent:#0f766e;--accent-ink:#042f2c;--danger:#be123c;--me:#e7f4f1;--shadow:0 10px 30px rgba(70,50,20,.08);
+color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--bg2:#181b27;--panel:#1c2030;--ink:#f6f3ec;--mute:#b0a89c;--line:#313748;--coin:#f5c16c;--accent:#5eead4;--accent-ink:#042f2c;--danger:#fb7185;--me:#24343a;--shadow:0 12px 32px rgba(0,0,0,.28);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12141c;--bg2:#181b27;--panel:#1c2030;--ink:#f6f3ec;--mute:#b0a89c;--line:#313748;--coin:#f5c16c;--accent:#5eead4;--accent-ink:#042f2c;--danger:#fb7185;--me:#24343a;--shadow:0 12px 32px rgba(0,0,0,.28);color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box}
-body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.45 ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(1200px 500px at 10% -10%,var(--bg2),transparent),var(--bg);color:var(--ink);font:400 16px/1.45 ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif}
 button,input,textarea{font:inherit;color:inherit}
-button{cursor:pointer;border:0;border-radius:10px;padding:.5em .9em;background:var(--accent);color:#07241b;font-weight:600}
-button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+button{cursor:pointer;border:0;border-radius:12px;padding:.55em .9em;background:var(--accent);color:var(--accent-ink);font-weight:700}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:600}
 button.bad{background:var(--danger);color:#fff}
+button.tiny{padding:.25em .5em;border-radius:8px;font-size:.8rem;font-weight:650}
 button:disabled{opacity:.45;cursor:default}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.55em .75em;width:100%}
-#login{height:100%;display:grid;place-items:center;padding:1rem}
-#login form{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:1.6rem;width:min(380px,100%);display:grid;gap:.8rem}
-#login h1{margin:0;font-size:1.9rem}
+input,textarea{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.6em .75em;width:100%}
+textarea{resize:none;min-height:44px;max-height:120px}
+#login{min-height:100%;display:grid;place-items:center;padding:1.2rem}
+#login form{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:1.5rem;width:min(420px,100%);display:grid;gap:.75rem;box-shadow:var(--shadow)}
+#login h1{margin:0;font-size:2rem;letter-spacing:-.03em}
 #login p{margin:0;color:var(--mute)}
-#err{color:var(--danger);min-height:1.3em;font-size:.9rem}
-#app{height:100%;display:none;flex-direction:column}
-header{display:flex;align-items:center;gap:.8rem;padding:.6rem 1rem;border-bottom:1px solid var(--line);background:var(--panel)}
-header b{font-size:1.15rem;flex:1}
-.coins{color:var(--coin);font-weight:600;white-space:nowrap}
-nav{display:flex;gap:.4rem;padding:.5rem 1rem;border-bottom:1px solid var(--line);overflow-x:auto}
-nav button{background:transparent;color:var(--mute);border:1px solid transparent}
+#err{color:var(--danger);min-height:1.3em;font-size:.92rem}
+#app{height:100dvh;display:none;flex-direction:column}
+header{display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent);position:sticky;top:0;z-index:3}
+header b{font-size:1.15rem;letter-spacing:-.02em}
+header .sp{flex:1}
+.coins{color:var(--coin);font-weight:750;white-space:nowrap}
+#status{min-height:0;color:var(--danger);font-size:.85rem;padding:0 .9rem}
+#status:empty{display:none}
+#status:not(:empty){padding:.35rem .9rem}
+nav{display:flex;gap:.35rem;padding:.45rem .7rem;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:transparent;color:var(--mute);border:1px solid transparent;white-space:nowrap;min-height:40px}
 nav button.on{background:var(--panel);color:var(--ink);border-color:var(--line)}
 main{flex:1;min-height:0;display:flex;justify-content:center}
 .pane{display:none;min-height:0;flex:1;max-width:760px;width:100%}
-#log{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.45rem}
-.m{max-width:85%;padding:.45rem .75rem;border-radius:14px;background:var(--panel);border:1px solid var(--line);overflow-wrap:anywhere}
-.m.me{align-self:flex-end;background:var(--me)}
-.m .n{font-weight:600;font-size:.85rem;color:var(--accent)}
-.m .x{background:none;color:var(--danger);padding:0 .3em;margin-left:.3em}
-.sys{align-self:center;color:var(--mute);font-size:.88rem;text-align:center}
-#send{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line)}
-.scroll{overflow-y:auto;padding:1rem;gap:.7rem;align-content:start}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.8rem;display:flex;gap:.8rem;align-items:center}
-.card .e{font-size:2rem}.card .i{flex:1;min-width:0}.card small{color:var(--mute);display:block}
-.price{color:var(--coin);font-weight:600}
-h2{margin:.2rem 0;font-size:1.05rem}
-.row{display:flex;gap:.5rem;flex-wrap:wrap}.row>*{flex:1;min-width:90px}
+#log{flex:1;overflow-y:auto;padding:.8rem .9rem 1rem;display:flex;flex-direction:column;gap:.55rem}
+.m{max-width:min(85%,520px);padding:.5rem .75rem;border-radius:16px;background:var(--panel);border:1px solid var(--line);overflow-wrap:anywhere;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.m.me{background:var(--me)}
+.m.hit{box-shadow:inset 3px 0 0 var(--danger)}
+.m .n{font-weight:750;font-size:.84rem;color:var(--accent);display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+.m .body{white-space:pre-wrap}
+.m .meta{color:var(--mute);font-size:.75rem;font-weight:500}
+.m.deleted{color:var(--mute);font-style:italic}
+.quote{border-left:3px solid var(--accent);padding:.15rem .5rem;margin-bottom:.35rem;color:var(--mute);font-size:.85rem}
+.sys{align-self:center;color:var(--mute);font-size:.86rem;text-align:center;max-width:90%}
+.mention{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent);border-radius:6px;padding:0 .2em;font-weight:750}
+.mention.me{background:color-mix(in srgb,var(--danger) 20%,transparent);color:var(--danger)}
+#composer{border-top:1px solid var(--line);background:var(--panel);padding:.55rem .7rem calc(.6rem + env(safe-area-inset-bottom,0px));display:grid;gap:.4rem}
+#replybar,#pending{display:flex;gap:.5rem;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.35rem .5rem;font-size:.88rem}
+#replybar[hidden],#pending[hidden]{display:none}
+#pending img{width:42px;height:42px;object-fit:cover;border-radius:8px}
+#send{display:flex;gap:.4rem;align-items:flex-end}
+#send textarea{flex:1;min-width:0}
+#typing{min-height:1.1em;color:var(--mute);font-size:.82rem;padding:0 .95rem}
+#pins,#polls{padding:.4rem .7rem 0;display:grid;gap:.4rem}
+.pin{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:.4rem .6rem;font-size:.86rem;color:var(--ink);text-align:left;font-weight:600;width:100%}
+.poll{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:.7rem;display:grid;gap:.4rem}
+.poll-opt{position:relative;overflow:hidden;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);font-weight:600}
+.poll-opt .bar{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.poll-opt span{position:relative}
+.poll-opt.on{border-color:var(--accent)}
+.pic{padding:0;background:transparent;border-radius:12px;display:block;margin-top:.35rem}
+.pic img{max-width:min(260px,100%);max-height:220px;border-radius:12px;display:block}
+.rbar,.tools{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem}
+.chip{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:.1em .45em;font-weight:650}
+.chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--panel))}
+.menu{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.35rem}
+#ac{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:grid;overflow:hidden;z-index:4}
+#ac[hidden]{display:none}
+#ac button{background:transparent;color:var(--ink);border-radius:0;text-align:left;font-weight:600}
+#ac button.on,#ac button:hover{background:var(--bg)}
+#p-chat{position:relative;display:none;flex-direction:column}
+.scroll{overflow-y:auto;padding:.9rem;gap:.7rem;align-content:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:.8rem;display:flex;gap:.75rem;align-items:center;box-shadow:var(--shadow)}
+.card .e{font-size:1.8rem}.card .i{flex:1;min-width:0}.card small{color:var(--mute);display:block}
+.price{color:var(--coin);font-weight:750}
+h2{margin:.3rem 0;font-size:1.02rem}
+.row{display:flex;gap:.45rem;flex-wrap:wrap}.row>*{flex:1;min-width:90px}
 .empty{color:var(--mute);padding:1rem;text-align:center}
-#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.5em 1em;border-radius:10px;display:none;z-index:9}
-.tag{font-size:.75rem;background:var(--coin);color:#2b1d00;border-radius:6px;padding:0 .4em;margin-left:.3em}
-body[data-tab=chat] #p-chat{display:flex;flex-direction:column}
+#toast{position:fixed;left:50%;bottom:calc(5.2rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.55em 1em;border-radius:12px;display:none;z-index:9;max-width:min(92vw,420px);text-align:center}
+.tag{font-size:.72rem;background:var(--coin);color:#2b1d00;border-radius:6px;padding:0 .4em}
+.tag.bad{background:var(--danger);color:#fff}
+body[data-tab=chat] #p-chat{display:flex}
 body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settings] #p-settings,body[data-tab=admin] #p-admin{display:grid}
-.mw{display:flex;gap:.5rem;align-items:flex-end;max-width:92%}
+.mw{display:flex;gap:.45rem;align-items:flex-end;max-width:100%}
 .mw.me{align-self:flex-end;flex-direction:row-reverse}
-.av{width:36px;height:36px;border-radius:50%;flex:none;background:var(--line);object-fit:cover;overflow:visible}
+.av{width:36px;height:36px;border-radius:50%;flex:none;background:var(--line);object-fit:cover}
 .av.big{width:104px;height:104px}
 .noav .mw .av{display:none}
-.big-bal{font-size:2.5rem;font-weight:600;color:var(--coin);line-height:1.1}
-.set{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.9rem;display:grid;gap:.6rem}
-.sw,.seg{display:flex;gap:.45rem;flex-wrap:wrap}
+.big-bal{font-size:2.4rem;font-weight:750;color:var(--coin);line-height:1.1}
+.set{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:.9rem;display:grid;gap:.55rem}
+.sw,.seg{display:flex;gap:.4rem;flex-wrap:wrap}
 .sw button{width:32px;height:32px;padding:0;border-radius:50%;border:2px solid var(--line)}
 .sw button.on,.seg button.on{outline:2px solid var(--accent);outline-offset:2px}
 .seg button{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
 .set label.t{display:flex;gap:.6rem;align-items:center}
 .set input[type=checkbox]{width:auto}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:end center;z-index:8;padding:1rem}
+#modal[hidden]{display:none}
+.sheet{background:var(--panel);color:var(--ink);border-radius:18px 18px 12px 12px;padding:1rem;width:min(480px,100%);display:grid;gap:.55rem;box-shadow:var(--shadow);max-height:min(86dvh,640px);overflow:auto}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.82);display:grid;place-items:center;z-index:10;padding:1rem}
+#lightbox[hidden]{display:none}
+#lightbox img{max-width:min(960px,100%);max-height:86dvh;border-radius:12px}
+#drop{position:fixed;inset:.6rem;border:2px dashed var(--accent);border-radius:18px;display:none;place-items:center;background:color-mix(in srgb,var(--panel) 88%,transparent);z-index:7;font-weight:750;pointer-events:none}
+body.drag #drop{display:grid}
+#mentions[hidden]{display:none}
+.badge{background:var(--danger);color:#fff;border-radius:999px;padding:0 .4em;font-size:.75rem}
+@media(max-width:640px){header b{font-size:1rem}.coins{font-size:.92rem}button{min-height:40px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
-<body data-tab="chat" data-side="shop">
+<body data-tab="chat">
 <div id="login"><form id="lf">
- <h1>CatChat 🐾</h1>
- <p>Pick a name to chat, earn coins and shop. Your name stays yours.</p>
- <input id="nm" placeholder="Username" maxlength="16" autocomplete="username">
- <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
- <p style="font-size:.85rem">New name? Just pick a password and we’ll create the account.</p>
- <div id="err"></div>
+ <h1>CatChat</h1>
+ <p>A small room for chat, coins, and the shop. Your name stays yours.</p>
+ <input id="nm" placeholder="Username" maxlength="16" autocomplete="username" aria-label="Username">
+ <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" aria-label="Password">
+ <p>New here? Choose a password and the account is created.</p>
+ <div id="err" role="alert"></div>
  <button>Log in or sign up</button>
 </form></div>
 
 <div id="app">
- <header><b>CatChat 🐾</b><span class="coins" id="bal"></span><button class="ghost" id="out">Leave</button></header>
+ <header>
+  <b>CatChat</b>
+  <button class="ghost tiny" id="theme" type="button">Theme</button>
+  <button class="ghost tiny" id="mentions" type="button" hidden>Mentions <span class="badge" id="mcount">0</span></button>
+  <span class="sp"></span>
+  <span class="coins" id="bal"></span>
+  <button class="ghost" id="out" type="button">Leave</button>
+ </header>
+ <div id="status" role="status"></div>
  <nav id="nav"></nav>
  <main>
-  <section class="pane" id="p-chat"><div id="log"></div>
-   <form id="send"><input id="msg" placeholder="Message, or /pay name 25" autocomplete="off" maxlength="300"><button>Send</button></form></section>
+  <section class="pane" id="p-chat">
+   <div id="pins"></div>
+   <div id="polls"></div>
+   <div id="log"></div>
+   <div id="typing" aria-live="polite"></div>
+   <div id="composer">
+    <div id="ac" hidden role="listbox"></div>
+    <div id="replybar" hidden></div>
+    <div id="pending" hidden></div>
+    <form id="send">
+     <button class="ghost" id="attach" type="button" aria-label="Attach image">＋</button>
+     <input id="file" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+     <button class="ghost" id="pollbtn" type="button" aria-label="Create a poll">Poll</button>
+     <textarea id="msg" rows="1" maxlength="300" placeholder="Message…  @ to mention, /pay name 25" aria-label="Message" autocomplete="off"></textarea>
+     <button id="sendbtn" type="submit">Send</button>
+    </form>
+   </div>
+  </section>
   <section class="pane scroll" id="p-shop"></section>
   <section class="pane scroll" id="p-wallet"></section>
   <section class="pane scroll" id="p-settings"></section>
   <section class="pane scroll" id="p-admin"></section>
  </main>
 </div>
-<div id="toast"></div>
+<div id="toast" role="status"></div>
+<div id="lightbox" hidden><img alt="Full size picture"></div>
+<div id="modal" hidden></div>
+<div id="drop">Drop an image to attach it</div>
 
 <script>
 const ROOT="meowmaster100", $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let meId=null,players={},items={},msgs=[],tab="chat",started=false;
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const REACTS=["👍","❤️","😂","🐱","🎉","😮","😢"];
+let meId=null,players={},items={},msgs=[],polls=[],pins=[],tab="chat";
+let replyTo=null, pending=null, editing=null, openMenu=0, acIndex=0, acNames=[];
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const me=()=>players[meId], isAdmin=()=>!!(me()&&me().admin);
 const FUR=["#f2a65a","#8d8d9b","#2f2f3a","#f4efe6","#c98a5b","#e8c9a0","#7aa7c7","#d6a6e0"],EYE=["#4cc38a","#f5c542","#4aa3ff","#ff8a5c","#b07cff"],PAT=["plain","stripes","patch","muzzle"],ACC=["none","bow","crown","glasses","hat"];
 const hashStr=s=>[...s].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7);
 const defAv=n=>{const h=hashStr(String(n).toLowerCase());return{mode:"cat",fur:h%FUR.length,eyes:(h>>3)%EYE.length,pat:(h>>5)%PAT.length,acc:0}};
 function catSVG(a,cls){
- const f=FUR[a.fur]||FUR[0],e=EYE[a.eyes]||EYE[0],p=PAT[a.pat]||"plain",c=ACC[a.acc]||"none";
+ const f=FUR[a.fur|0]||FUR[0],e=EYE[a.eyes|0]||EYE[0],p=PAT[a.pat|0]||"plain",c=ACC[a.acc|0]||"none";
  const eye=x=>`<ellipse cx="${x}" cy="56" rx="6" ry="7" fill="${e}"/><ellipse cx="${x}" cy="56" rx="2.2" ry="5" fill="#1a1a1a"/><circle cx="${x+2}" cy="53" r="1.6" fill="#fff"/>`;
  return `<svg class="${cls}" viewBox="0 -8 100 108" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="16,42 20,8 46,26" fill="${f}"/><polygon points="84,42 80,8 54,26" fill="${f}"/><polygon points="23,33 25,17 38,27" fill="#ff9db0"/><polygon points="77,33 75,17 62,27" fill="#ff9db0"/><ellipse cx="50" cy="58" rx="36" ry="31" fill="${f}"/>`
  +(p==="stripes"?`<path d="M50 28v10M40 30l2 8M60 30l-2 8" stroke="rgba(0,0,0,.28)" stroke-width="3" stroke-linecap="round"/>`:p==="patch"?`<ellipse cx="34" cy="52" rx="14" ry="13" fill="rgba(0,0,0,.22)"/>`:p==="muzzle"?`<ellipse cx="50" cy="71" rx="18" ry="13" fill="rgba(255,255,255,.7)"/>`:"")
  +eye(37)+eye(63)+`<polygon points="46,66 54,66 50,71" fill="#ff7d96"/><path d="M50 71q-5 6-10 2M50 71q5 6 10 2" stroke="#3a2a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M30 68l-16-3M30 72l-16 3M70 68l16-3M70 72l16 3" stroke="rgba(0,0,0,.35)" stroke-width="1.2" stroke-linecap="round"/>`
  +(c==="bow"?`<polygon points="72,24 86,16 86,32" fill="#ff5d8f"/><polygon points="72,24 58,16 58,32" fill="#ff5d8f"/><circle cx="72" cy="24" r="4" fill="#d63b6e"/>`:c==="crown"?`<polygon points="32,26 35,6 43,18 50,3 57,18 65,6 68,26" fill="#ffc93c" stroke="#c98f00" stroke-width="1.5"/>`:c==="glasses"?`<circle cx="37" cy="56" r="10" fill="none" stroke="#222" stroke-width="2.2"/><circle cx="63" cy="56" r="10" fill="none" stroke="#222" stroke-width="2.2"/><path d="M47 56h6" stroke="#222" stroke-width="2.2"/>`:c==="hat"?`<polygon points="38,26 50,-6 62,26" fill="#7b61ff"/><circle cx="50" cy="-6" r="4" fill="#ffc93c"/>`:"")+`</svg>`;
 }
+function safePhoto(u){return /^\/avatar\/[A-Za-z0-9_]{2,16}\?v=\d+$/.test(u)?u:""}
+function safeImg(u){return /^\/img\/[a-f0-9]{24}$/.test(u)?u:""}
 function avHTML(p,big){
  const a=(p&&p.avatar)||defAv((p&&p.name)||"?"),cls="av"+(big?" big":"");
- return a.mode==="photo"&&typeof a.photo==="string"&&a.photo.startsWith("/avatar/")?`<img class="${cls}" alt="" src="${esc(a.photo)}">`:catSVG(a,cls);
+ const src=a.mode==="photo"?safePhoto(a.photo):"";
+ return src?`<img class="${cls}" alt="" src="${esc(src)}">`:catSVG(a,cls);
 }
 const showAv=()=>ls.get("meow-showav")!=="0";
 const applyAv=()=>document.body.classList.toggle("noav",!showAv());
-function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2600)}
-function fail(t){$("#err").textContent=t}
+function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",3200)}
+function fail(t){$("#err").textContent=t||""}
+function clock(ts){try{return new Date(ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}catch(e){return ""}}
+function fmtText(text){
+ const src=String(text??""); let out="", last=0, re=/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{2,16})/g, m;
+ while((m=re.exec(src))){
+  out+=esc(src.slice(last,m.index+m[1].length));
+  const id=m[2].toLowerCase(), pl=players[id];
+  if(pl) out+=`<span class="mention${id===meId?" me":""}">@${esc(pl.name)}</span>`;
+  else out+=esc("@"+m[2]);
+  last=m.index+m[0].length;
+ }
+ return out+esc(src.slice(last));
+}
+function themeNow(){const set=document.documentElement.dataset.theme; if(set==="light"||set==="dark") return set; return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}
+function applyTheme(mode){
+ if(mode==="light"||mode==="dark"){document.documentElement.dataset.theme=mode; ls.set("meow-theme",mode)}
+ else {delete document.documentElement.dataset.theme; ls.set("meow-theme","system")}
+ const dark=themeNow()==="dark";
+ $("#theme").textContent=dark?"Dark":"Light";
+ const meta=document.querySelector('meta[name="theme-color"]');
+ if(meta) meta.content=dark?"#12141c":"#f4f0e8";
+}
+function initTheme(){const saved=ls.get("meow-theme"); applyTheme(saved==="light"||saved==="dark"?saved:"system")}
+initTheme();
+$("#theme").onclick=()=>applyTheme(themeNow()==="dark"?"light":"dark");
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if((ls.get("meow-theme")||"system")==="system") applyTheme("system")});
 
 let token=ls.get("meow-token")||"",es=null;
 function showLogin(msg){$("#app").style.display="none";$("#login").style.display="grid";fail(msg||"")}
 function logoutLocal(){ls.del("meow-token");token="";if(es){es.close();es=null}}
 async function api(a,body){
- const r=await fetch("/api/"+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify(body||{})});
+ let r;
+ try{r=await fetch("/api/"+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify(body||{})})}
+ catch(e){toast("Can’t reach CatChat. Check your connection and try again."); throw e}
  const j=await r.json().catch(()=>({}));
  if(r.status===401){logoutLocal();showLogin("Please log in again.");throw new Error("auth")}
- if(!r.ok){toast(j.error||"That didn’t work");throw new Error(j.error||"failed")}
+ if(!r.ok){toast(j.error||"That didn’t work. Try again.");throw new Error(j.error||"failed")}
  return j;
 }
 function enter(t,id){token=t;ls.set("meow-token",t);meId=id;fail("");$("#login").style.display="none";$("#app").style.display="flex";start()}
 (async()=>{
  if(!token)return;
  try{const r=await fetch("/api/me",{headers:{Authorization:"Bearer "+token}});
-  if(r.ok)enter(token,(await r.json()).id);else logoutLocal()}catch(e){}
+  if(r.ok)enter(token,(await r.json()).id);else logoutLocal()}catch(e){$("#status").textContent="Can’t reach CatChat right now."}
 })();
 $("#lf").onsubmit=async e=>{
  e.preventDefault();const n=$("#nm").value.trim(),pw=$("#pw").value;
@@ -140,71 +252,261 @@ $("#lf").onsubmit=async e=>{
  if(pw.length<6)return fail("Password must be at least 6 characters.");
  try{
   const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:n,pw})});
-  const j=await r.json();if(!r.ok)return fail(j.error||"Couldn’t log in.");
+  const j=await r.json().catch(()=>({})); if(!r.ok)return fail(j.error||"Couldn’t log in.");
   enter(j.token,j.id);
- }catch(x){fail("Couldn’t reach the server.")}
+ }catch(x){fail("Can’t reach CatChat. Check your connection and try again.")}
 };
 $("#out").onclick=()=>{fetch("/api/logout",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:"{}"}).finally(()=>{logoutLocal();location.reload()})};
 
 function start(){
- applyAv();if(es)es.close();
+ applyAv();if(es)es.close(); $("#status").textContent="";
  es=new EventSource("/events?t="+encodeURIComponent(token));
  es.addEventListener("state",ev=>{
   const d=JSON.parse(ev.data);
-  players={};d.players.forEach(p=>players[p.id]=p);
-  if(players[meId])Object.assign(players[meId],d.me);
-  items={};d.items.forEach(i=>items[i.id]=i);
-  msgs=d.messages;renderAll();
+  players={};(d.players||[]).forEach(p=>players[p.id]=p);
+  if(players[meId])Object.assign(players[meId],d.me||{});
+  items={};(d.items||[]).forEach(i=>items[i.id]=i);
+  msgs=d.messages||[]; polls=d.polls||[]; pins=d.pins||[];
+  $("#status").textContent=""; renderAll();
  });
- es.onerror=()=>{if(es&&es.readyState===2){logoutLocal();showLogin("Session expired. Log in again.")}};
+ es.addEventListener("typing",ev=>{
+  let list=[]; try{list=JSON.parse(ev.data)}catch(e){}
+  list=list.filter(x=>x.id!==meId);
+  $("#typing").textContent=list.length?list.map(x=>x.name).join(", ")+(list.length>1?" are typing…":" is typing…"):"";
+  clearTimeout(es._type);
+  if(list.length) es._type=setTimeout(()=>{$("#typing").textContent=""},4000);
+ });
+ es.addEventListener("bye",ev=>{logoutLocal();showLogin(ev.data==="banned"?"This account is banned.":"You were signed out.")});
+ es.onerror=async()=>{
+  if(!es||es.readyState!==2){$("#status").textContent="Reconnecting…";return}
+  try{const r=await fetch("/api/me",{headers:{Authorization:"Bearer "+token}});
+   if(r.status===401){logoutLocal();showLogin("Your session ended. Please log in again.")}
+   else $("#status").textContent="Can’t reach CatChat. Retrying…";
+  }catch(e){$("#status").textContent="Can’t reach CatChat. Retrying…"}
+ };
  setTab("chat");
 }
 function setTab(t){
  tab=t;document.body.dataset.tab=t;
  const tabs=[["chat","Chat"],["shop","Shop"],["wallet","Wallet"],["settings","Settings"]];if(isAdmin())tabs.push(["admin","Admin"]);
- $("#nav").innerHTML=tabs.map(([k,l])=>`<button class="${t===k?"on":""}" data-t="${k}">${l}</button>`).join("");
+ $("#nav").innerHTML=tabs.map(([k,l])=>`<button type="button" class="${t===k?"on":""}" data-t="${k}">${l}</button>`).join("");
 }
 $("#nav").onclick=e=>{const t=e.target.dataset.t;if(t)setTab(t)};
-addEventListener("resize",()=>meId&&setTab(tab));
 
 function renderAll(){
- if(me()&&me().banned){meId=null;$("#app").style.display="none";$("#login").style.display="grid";fail("Your account has been banned.");logoutLocal();return}
+ if(me()&&me().banned){logoutLocal();showLogin("Your account has been banned.");return}
  if(!me())return;
- $("#bal").textContent="🪙 "+(meId===ROOT?"∞":me().coins);
- if(!isAdmin()&&tab==="admin")tab="shop";
- setTab(tab);renderChat();renderShop();renderWallet();renderSettings();renderAdmin();
+ $("#bal").textContent=(meId===ROOT?"∞":me().coins)+" coins";
+ const mentions=(me().mentions)||[];
+ $("#mentions").hidden=!mentions.length;
+ $("#mcount").textContent=String(mentions.length);
+ const muted=!!me().muted;
+ $("#msg").disabled=muted; $("#attach").disabled=muted; $("#pollbtn").disabled=muted; $("#sendbtn").disabled=muted;
+ $("#msg").placeholder=muted?"You’re muted":"Message…  @ to mention, /pay name 25";
+ if(!isAdmin()&&tab==="admin")tab="chat";
+ setTab(tab);renderPins();renderPolls();renderChat();renderShop();renderWallet();renderSettings();renderAdmin();
+ paintComposer();
+}
+function renderPins(){
+ $("#pins").innerHTML=(pins||[]).map(p=>`<button type="button" class="pin" data-jump="${p.id}"><b>Pinned</b> ${esc(p.name)}: ${esc(p.text||"Picture")}</button>`).join("");
+}
+function renderPolls(){
+ const open=(polls||[]).filter(p=>!p.closed), past=(polls||[]).filter(p=>p.closed).slice(0,3);
+ const card=p=>{
+  const votes=p.votes||[], total=votes.length, mine=votes.find(v=>v.pid===meId);
+  const opts=(p.options||[]).map((label,i)=>{
+   const n=votes.filter(v=>v.opt===i).length, pct=total?Math.round(n*100/total):0;
+   return `<button type="button" class="poll-opt${mine&&mine.opt===i?" on":""}" data-vote="${p.id}" data-opt="${i}" ${p.closed?"disabled":""}><span class="bar" style="width:${pct}%"></span><span>${esc(label)} · ${n}${total?` · ${pct}%`:""}</span></button>`;
+  }).join("");
+  const canClose=!p.closed&&(p.pid===meId||isAdmin());
+  return `<div class="poll"><b>${esc(p.question)}</b><small style="color:var(--mute)">${esc(p.name)} · ${total} vote${total===1?"":"s"}${p.closed?" · closed":""}</small>${opts}${canClose?`<button type="button" class="ghost tiny" data-close="${p.id}">Close poll</button>`:""}</div>`;
+ };
+ $("#polls").innerHTML=open.map(card).join("")+(past.length?past.map(card).join(""):"");
 }
 function renderChat(){
- const l=$("#log"),stick=l.scrollHeight-l.scrollTop-l.clientHeight<80;
+ const l=$("#log"), stick=l.scrollHeight-l.scrollTop-l.clientHeight<90;
  l.innerHTML=msgs.map(m=>{
-  if(m.sys)return `<div class="sys">${esc(m.text)}</div>`;
+  if(m.sys)return `<div class="sys">${fmtText(m.text)} <span class="meta">${esc(clock(m.ts))}</span></div>`;
+  if(m.deleted)return `<div class="sys">Message deleted</div>`;
   const mine=m.name&&m.name.toLowerCase()===meId, p=players[(m.name||"").toLowerCase()];
-  return `<div class="mw ${mine?"me":""}">${avHTML(p||{name:m.name||"?"})}<div class="m ${mine?"me":""}"><div class="n">${esc(m.name)}${p&&p.admin?'<span class="tag">admin</span>':""}${isAdmin()?`<button class="x" data-del="${m.id}" title="Delete message">✕</button>`:""}</div>${esc(m.text)}</div></div>`}).join("")||'<div class="empty">No messages yet. Say hi.</div>';
+  const hit=!mine&&new RegExp("(^|[^A-Za-z0-9_])@"+meId+"\\b","i").test(m.text||"");
+  const img=safeImg(m.image);
+  const reacts=(m.reactions||[]).map(r=>{const i=REACTS.indexOf(r.emoji); if(i<0)return ""; const on=(r.users||[]).includes(meId); return `<button type="button" class="chip${on?" on":""}" data-react="${m.id}" data-e="${i}">${r.emoji} ${(r.users||[]).length}</button>`}).join("");
+  const tools=openMenu===m.id?`<div class="menu">
+   <button type="button" class="ghost tiny" data-reply="${m.id}">Reply</button>
+   <button type="button" class="ghost tiny" data-reactopen="${m.id}">React</button>
+   ${mine&&Date.now()-m.ts<15*60*1000&&m.text?`<button type="button" class="ghost tiny" data-edit="${m.id}">Edit</button>`:""}
+   ${mine?`<button type="button" class="ghost tiny" data-delown="${m.id}">Delete</button>`:""}
+   ${isAdmin()?`<button type="button" class="ghost tiny" data-pin="${m.id}">${pins.some(x=>x.id===m.id)?"Unpin":"Pin"}</button>`:""}
+   ${isAdmin()?`<button type="button" class="tiny bad" data-del="${m.id}">Remove</button>`:""}
+   ${mine?"":`<button type="button" class="ghost tiny" data-report="message" data-target="${m.id}">Report</button>`}
+   ${p&&p.id!==meId?`<button type="button" class="ghost tiny" data-report="user" data-target="${esc(p.id)}">Report user</button>`:""}
+   </div>`+(openMenu===m.id&&reactFor===m.id?`<div class="rbar">${REACTS.map((e,i)=>`<button type="button" class="chip" data-react="${m.id}" data-e="${i}" aria-label="React ${e}">${e}</button>`).join("")}</div>`:""):"";
+  const quote=m.reply?`<div class="quote"><b>${esc(m.replyName||"Message")}</b> ${m.replyText?esc(m.replyText):"Message deleted"}</div>`:"";
+  return `<div class="mw ${mine?"me":""}" data-mid="${m.id}">${avHTML(p||{name:m.name||"?"})}<div class="m ${mine?"me":""} ${hit?"hit":""}">${quote}<div class="n">${esc(m.name)}${p&&p.admin?'<span class="tag">admin</span>':""}${p&&p.muted?'<span class="tag bad">muted</span>':""}<span class="meta">${esc(clock(m.ts))}${m.edited?" · edited":""}</span><button type="button" class="ghost tiny" data-menu="${m.id}" aria-label="Message actions">···</button></div><div class="body">${fmtText(m.text)}</div>${img?`<button type="button" class="pic" data-zoom="${img}"><img alt="Shared picture" src="${img}"></button>`:""}${reacts?`<div class="rbar">${reacts}</div>`:""}${tools}</div></div>`;
+ }).join("")||'<div class="empty">No messages yet. Say hello.</div>';
  if(stick)l.scrollTop=l.scrollHeight;
 }
-$("#log").onclick=async e=>{const id=e.target.dataset.del;if(id&&isAdmin())try{await api("admin/delmsg",{id})}catch(x){}};
+let reactFor=0;
+function paintComposer(){
+ const bar=$("#replybar");
+ if(editing){bar.hidden=false; bar.innerHTML=`<span>Editing your message</span><button type="button" class="ghost tiny" id="cancel-extra">Cancel</button>`}
+ else if(replyTo){bar.hidden=false; bar.innerHTML=`<span>Replying to <b>${esc(replyTo.name)}</b>: ${esc(replyTo.text||"Picture")}</span><button type="button" class="ghost tiny" id="cancel-extra">Cancel</button>`}
+ else bar.hidden=true;
+ const pen=$("#pending");
+ if(pending){pen.hidden=false; pen.innerHTML=`<img alt="" src="${pending.preview}"><span>Picture ready</span><button type="button" class="ghost tiny" id="cancel-pic">Remove</button>`}
+ else pen.hidden=true;
+}
+$("#composer").onclick=e=>{
+ if(e.target.id==="cancel-extra"){editing=null; replyTo=null; paintComposer()}
+ if(e.target.id==="cancel-pic"){pending=null; paintComposer()}
+};
+$("#pins").onclick=e=>{const id=e.target.closest("[data-jump]")?.dataset.jump; if(!id)return; const el=document.querySelector(`[data-mid="${id}"]`); if(el)el.scrollIntoView({block:"center"})};
+$("#polls").onclick=async e=>{
+ const v=e.target.closest("[data-vote]"); const c=e.target.closest("[data-close]");
+ try{if(v)await api("poll/vote",{id:+v.dataset.vote,opt:+v.dataset.opt}); else if(c)await api("poll/close",{id:+c.dataset.close})}catch(x){}
+};
+$("#log").onclick=async e=>{
+ const menu=e.target.closest("[data-menu]");
+ if(menu){const id=+menu.dataset.menu; openMenu=openMenu===id?0:id; reactFor=0; renderChat(); return}
+ const z=e.target.closest("[data-zoom]");
+ if(z){const src=safeImg(z.dataset.zoom); if(!src)return; $("#lightbox img").src=src; $("#lightbox").hidden=false; return}
+ const react=e.target.closest("[data-react]");
+ if(react){openMenu=0; reactFor=0; try{await api("react",{id:+react.dataset.react,emoji:REACTS[+react.dataset.e]})}catch(x){} return}
+ if(e.target.dataset.reactopen){reactFor=+e.target.dataset.reactopen; openMenu=reactFor; renderChat(); return}
+ if(e.target.dataset.reply){const m=msgs.find(x=>x.id===+e.target.dataset.reply); if(!m)return; editing=null; replyTo={id:m.id,name:m.name,text:(m.text||"").slice(0,80)}; openMenu=0; paintComposer(); $("#msg").focus(); return}
+ if(e.target.dataset.edit){const m=msgs.find(x=>x.id===+e.target.dataset.edit); if(!m)return; replyTo=null; pending=null; editing={id:m.id}; $("#msg").value=m.text||""; openMenu=0; paintComposer(); $("#msg").focus(); return}
+ if(e.target.dataset.delown){const id=+e.target.dataset.delown; openModal(`<h2>Delete this message?</h2><p>People will see that it was removed.</p><div class="row"><button type="button" class="ghost" id="modal-cancel">Keep</button><button type="button" class="bad" id="modal-ok">Delete</button></div>`,()=>{$("#modal-ok").onclick=async()=>{closeModal(); try{await api("msg/delete",{id})}catch(x){}}})}
+ if(e.target.dataset.pin){try{await api("pin",{id:+e.target.dataset.pin}); openMenu=0}catch(x){} return}
+ if(e.target.dataset.del){try{await api("admin/delmsg",{id:+e.target.dataset.del}); openMenu=0}catch(x){} return}
+ if(e.target.dataset.report) openReport(e.target.dataset.report, e.target.dataset.target);
+};
+function openReport(kind,target){
+ openModal(`<h2>Report this ${kind==="user"?"person":"message"}</h2><textarea id="reason" maxlength="200" placeholder="What happened?"></textarea><div class="row"><button type="button" class="ghost" id="modal-cancel">Cancel</button><button type="button" id="modal-ok">Send report</button></div>`,()=>{
+  $("#modal-ok").onclick=async()=>{const reason=$("#reason").value.trim(); if(reason.length<3)return toast("Add a short reason."); closeModal(); try{await api("report",{kind,target,reason}); toast("Report sent. Thanks.")}catch(x){}};
+ });
+}
+$("#lightbox").onclick=()=>{$("#lightbox").hidden=true; $("#lightbox img").src=""};
+addEventListener("keydown",e=>{if(e.key==="Escape"){$("#lightbox").hidden=true; if(!$("#modal").hidden)closeModal()}});
+
+let lastType=0;
+$("#msg").addEventListener("input",()=>{
+ const now=Date.now();
+ if(now-lastType>1500&&$("#msg").value.trim()&&!editing){lastType=now; fetch("/api/typing",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:"{}"}).catch(()=>{})}
+ showAc();
+});
+$("#msg").addEventListener("keydown",e=>{
+ const box=$("#ac");
+ if(!box.hidden){
+  const n=acNames.length;
+  if(e.key==="ArrowDown"){e.preventDefault(); acIndex=(acIndex+1)%n; paintAc(); return}
+  if(e.key==="ArrowUp"){e.preventDefault(); acIndex=(acIndex-1+n)%n; paintAc(); return}
+  if(e.key==="Enter"||e.key==="Tab"){e.preventDefault(); chooseAc(acIndex); return}
+  if(e.key==="Escape"){box.hidden=true; return}
+ }
+ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); $("#send").requestSubmit()}
+});
+function mentionQuery(){
+ const el=$("#msg"), v=el.value, i=el.selectionStart??v.length, upto=v.slice(0,i);
+ const m=upto.match(/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{0,16})$/);
+ return m?m[2].toLowerCase():null;
+}
+function showAc(){
+ const q=mentionQuery(); const box=$("#ac");
+ if(q==null){box.hidden=true; return}
+ acNames=Object.values(players).filter(p=>!p.banned&&p.id!==meId&&(p.id.startsWith(q)||p.name.toLowerCase().startsWith(q))).slice(0,6).map(p=>p.name);
+ if(!acNames.length){box.hidden=true; return}
+ acIndex=Math.min(acIndex,acNames.length-1); box.hidden=false; paintAc();
+}
+function paintAc(){$("#ac").innerHTML=acNames.map((n,i)=>`<button type="button" class="${i===acIndex?"on":""}" data-i="${i}" role="option">${esc(n)}</button>`).join("")}
+function chooseAc(i){
+ const name=acNames[i]; if(!name)return; const el=$("#msg"), v=el.value, pos=el.selectionStart??v.length, upto=v.slice(0,pos);
+ const m=upto.match(/(^|[^A-Za-z0-9_])@([A-Za-z0-9_]{0,16})$/); if(!m)return;
+ const start=pos-m[2].length-1, next=v.slice(0,start)+"@"+name+" "+v.slice(pos);
+ el.value=next; const caret=start+name.length+2; el.setSelectionRange(caret,caret); el.focus(); $("#ac").hidden=true;
+}
+$("#ac").addEventListener("mousedown",e=>{const b=e.target.closest("button"); if(!b)return; e.preventDefault(); chooseAc(+b.dataset.i)});
 $("#send").onsubmit=async e=>{
- e.preventDefault();const t=$("#msg").value.trim();if(!t||!me())return;$("#msg").value="";
+ e.preventDefault(); if(!me()||me().muted)return; const text=$("#msg").value.trim();
+ if(editing){if(!text)return toast("Message can’t be empty."); try{await api("edit",{id:editing.id,text}); editing=null; $("#msg").value=""; paintComposer()}catch(x){} return}
+ if(!text&&!pending)return;
+ const paym=text.match(/^\/pay\s+(\S+)\s+(\d+)$/i);
+ if(paym&&!pending){$("#msg").value=""; return api("pay",{to:paym[1],amt:+paym[2]}).catch(()=>{})}
+ if(text[0]==="/"&&!pending)return toast("Try /pay name 25");
  try{
-  const c=t.match(/^\/pay\s+(\S+)\s+(\d+)$/i);
-  if(c)return pay(c[1],+c[2]);
-  if(t[0]==="/")return toast("Try /pay name 25");
-  await api("send",{text:t});
+  let image="";
+  if(pending){const up=await api("image",{data:pending.data}); image=up.id}
+  const body={text}; if(image)body.image=image; if(replyTo)body.reply=replyTo.id;
+  await api("send",body);
+  pending=null; replyTo=null; $("#msg").value=""; paintComposer();
  }catch(x){}
 };
-async function pay(to,amt){await api("pay",{to,amt})}
+$("#attach").onclick=()=>$("#file").click();
+$("#file").onchange=()=>{const f=$("#file").files&&$("#file").files[0]; $("#file").value=""; if(f)stageFile(f)};
+addEventListener("paste",e=>{
+ if(!meId||!$("#app").style.display||$("#app").style.display==="none")return;
+ const item=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type&&i.type.startsWith("image/"));
+ if(!item)return; e.preventDefault(); stageFile(item.getAsFile());
+});
+addEventListener("dragover",e=>{if(!meId)return; if([...(e.dataTransfer&&e.dataTransfer.items||[])].some(i=>i.kind==="file")){e.preventDefault(); document.body.classList.add("drag")}});
+addEventListener("dragleave",e=>{if(e.target===document.documentElement||e.target===document.body)document.body.classList.remove("drag")});
+addEventListener("drop",e=>{document.body.classList.remove("drag"); if(!meId)return; const f=[...(e.dataTransfer&&e.dataTransfer.files||[])].find(x=>/^image\//.test(x.type)||/\.(png|jpe?g|gif|webp)$/i.test(x.name)); if(!f)return; e.preventDefault(); stageFile(f)});
+async function stageFile(file){
+ if(!file)return toast("That file isn’t a picture.");
+ if(me()&&me().muted)return toast("You’re muted and can’t post right now.");
+ try{const data=await compressImage(file); pending={data,preview:data}; editing=null; paintComposer(); toast("Picture ready. Add a note or just send.")}
+ catch(err){toast(err.message||"Couldn’t use that image.")}
+}
+async function compressImage(file){
+ const bmp=await createImageBitmap(file).catch(()=>{throw new Error("Couldn’t read that image. Use a JPEG, PNG, GIF, or WebP.")});
+ let w=bmp.width,h=bmp.height,q=0.55,max=800;
+ const fit=Math.min(1,max/Math.max(w,h,1)); w=Math.max(1,Math.round(w*fit)); h=Math.max(1,Math.round(h*fit));
+ const canvas=document.createElement("canvas"), ctx=canvas.getContext("2d",{alpha:false});
+ let data="";
+ for(let i=0;i<7;i++){
+  canvas.width=w; canvas.height=h; ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h); ctx.drawImage(bmp,0,0,w,h);
+  data=canvas.toDataURL("image/jpeg",q);
+  if(data.length<52000) break;
+  q=Math.max(0.32,q-0.08); w=Math.max(1,Math.round(w*0.82)); h=Math.max(1,Math.round(h*0.82));
+ }
+ if(data.length>56000) throw new Error("That image is still too big after compressing. Try a smaller one.");
+ return data;
+}
+$("#pollbtn").onclick=()=>{
+ let n=2;
+ const draw=()=>openModal(`<h2>New poll</h2><input id="pq" maxlength="120" placeholder="Question"><div id="popts"></div><button type="button" class="ghost" id="padd">Add a choice</button><div class="row"><button type="button" class="ghost" id="modal-cancel">Cancel</button><button type="button" id="modal-ok">Create poll</button></div>`,()=>{
+  const box=$("#popts");
+  const inputs=()=>{box.innerHTML=Array.from({length:n},(_,i)=>`<input data-opt placeholder="Choice ${i+1}" maxlength="40">`).join("")};
+  inputs();
+  $("#padd").onclick=()=>{if(n<10){n++; inputs()}};
+  $("#modal-ok").onclick=async()=>{
+   const question=$("#pq").value.trim(); const options=[...box.querySelectorAll("input")].map(i=>i.value.trim()).filter(Boolean);
+   if(!question)return toast("Ask a question."); if(options.length<2)return toast("Give the poll at least 2 choices.");
+   closeModal(); try{await api("poll/create",{question,options}); toast("Poll posted.")}catch(x){}
+  };
+ });
+ draw();
+};
+$("#mentions").onclick=async()=>{
+ const list=(me()&&me().mentions)||[];
+ const lines=list.slice(0,6).map(m=>`<div class="card"><div class="i"><b>${esc(m.name)}</b><small>${esc(m.text||"")}</small></div></div>`).join("")||"<p>No new mentions.</p>";
+ openModal(`<h2>Mentions</h2>${lines}<button type="button" id="modal-cancel">OK</button>`,()=>{ api("mention/seen").catch(()=>{}) });
+};
+
+function openModal(html,ready){const m=$("#modal"); m.innerHTML=`<div class="sheet">${html}</div>`; m.hidden=false; m.onclick=e=>{if(e.target===m||e.target.id==="modal-cancel")closeModal()}; ready&&ready()}
+function closeModal(){$("#modal").hidden=true; $("#modal").innerHTML=""}
 
 const MAX_SELL=5;
 function renderShop(){
  const box=$("#p-shop"),m=me();
- if(!$("#sf"))box.innerHTML=`<h2>Sell an item</h2><form id="sf" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div><input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" max="1000000" placeholder="Price" required><button>List for sale</button></div><small id="slots"></small></form><h2>Shop</h2><div id="shoplist" style="display:grid;gap:.7rem"></div>`;
+ if(!$("#sf"))box.innerHTML=`<h2>Sell an item</h2><form id="sf" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4" aria-label="Emoji"><input name="name" placeholder="Item name" required maxlength="40" aria-label="Item name"></div><input name="desc" placeholder="Description" maxlength="80" aria-label="Description"><div class="row"><input name="price" type="number" min="1" max="1000000" placeholder="Price" required aria-label="Price"><button>List for sale</button></div><small id="slots"></small></form><h2>Shop</h2><div id="shoplist" style="display:grid;gap:.7rem"></div>`;
  const mine=Object.values(items).filter(i=>i.seller===meId&&i.stock!==0).length,full=!isAdmin()&&mine>=MAX_SELL;
  $("#slots").textContent=isAdmin()?`${mine} listed · admins can sell unlimited items`:`${mine}/${MAX_SELL} items listed`;
  $("#sf button").disabled=full;
  const list=Object.entries(items).filter(([,i])=>!(i.seller&&i.stock===0));
  $("#shoplist").innerHTML=list.length?list.map(([id,i])=>{
   const out=i.stock===0,own=i.seller===meId,poor=m&&meId!==ROOT&&m.coins<i.price,sp=i.seller&&players[i.seller];
-  return `<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>${esc(i.desc||"")}${i.stock>0&&!i.seller?` · ${i.stock} left`:""}</small>${i.seller?`<small>Sold by ${esc(sp?sp.name:"a cat")}</small>`:""}<span class="price">🪙 ${i.price}</span></div>${own?`<button class="ghost" data-cancel="${id}">Cancel</button>`:`<button data-buy="${id}" ${out||poor?"disabled":""}>${out?"Sold out":"Buy"}</button>`}</div>`}).join(""):`<div class="empty">Nothing for sale yet. List the first item above!</div>`;
+  return `<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>${esc(i.desc||"")}${i.stock>0&&!i.seller?` · ${i.stock} left`:""}</small>${i.seller?`<small>Sold by ${esc(sp?sp.name:"a cat")}</small>`:""}<span class="price">${i.price} coins</span></div>${own?`<button class="ghost" type="button" data-cancel="${id}">Cancel</button>`:`<button type="button" data-buy="${id}" ${out||poor?"disabled":""}>${out?"Sold out":"Buy"}</button>`}</div>`}).join(""):`<div class="empty">Nothing for sale yet. List the first item above.</div>`;
 }
 $("#p-shop").onclick=async e=>{
  const d=e.target.dataset;
@@ -226,31 +528,33 @@ function renderWallet(){
  const isR=p=>p.name.toLowerCase()===ROOT;
  const top=Object.values(players).filter(p=>!p.banned).sort((a,b)=>isR(b)-isR(a)||b.coins-a.coins).slice(0,8);
  const names=Object.values(players).filter(p=>p.name.toLowerCase()!==meId&&!p.banned);
- box.innerHTML=`<div class="set" style="text-align:center"><small style="color:var(--mute)">Your balance</small><div class="big-bal">🪙 ${R?"∞":m.coins}</div><button data-daily ${left>0?"disabled":""}>${left>0?`Daily bonus in ${Math.ceil(left/36e5)}h`:"Claim 50 daily coins"}</button></div>
- <h2>Send coins</h2><form id="payf" class="set"><div class="row"><input name="to" list="plist" placeholder="Player name" required maxlength="16" autocomplete="off"><input name="amt" type="number" min="1" placeholder="Amount" required></div><datalist id="plist">${names.map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist><button>Send</button></form>
+ box.innerHTML=`<div class="set" style="text-align:center"><small style="color:var(--mute)">Your balance</small><div class="big-bal">${R?"∞":m.coins} coins</div><button type="button" data-daily ${left>0?"disabled":""}>${left>0?`Daily bonus in ${Math.ceil(left/36e5)}h`:"Claim 50 daily coins"}</button></div>
+ <h2>Send coins</h2><form id="payf" class="set"><div class="row"><input name="to" list="plist" placeholder="Player name" required maxlength="16" autocomplete="off" aria-label="Player name"><input name="amt" type="number" min="1" placeholder="Amount" required aria-label="Amount"></div><datalist id="plist">${names.map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist><button>Send</button></form>
  <h2>Your items</h2>${inv.length?inv.map(([id,n])=>`<div class="card"><div class="e">${esc(items[id].emoji||"🎁")}</div><div class="i"><b>${esc(items[id].name)}</b></div><b>×${n}</b></div>`).join(""):'<div class="empty">Nothing yet. Visit the shop.</div>'}
- <h2>Richest cats</h2>${top.map((p,i)=>`<div class="card">${avHTML(p)}<div class="i"><b>${i+1}. ${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}</div><span class="price">🪙 ${isR(p)?"∞":p.coins}</span></div>`).join("")}`;
+ <h2>Richest cats</h2>${top.map((p,i)=>`<div class="card">${avHTML(p)}<div class="i"><b>${i+1}. ${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}</div><span class="price">${isR(p)?"∞":p.coins}</span></div>`).join("")}`;
 }
-$("#p-wallet").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{await pay(String(f.get("to")).trim(),parseInt(f.get("amt")));e.target.reset()}catch(x){}};
+$("#p-wallet").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{await api("pay",{to:String(f.get("to")).trim(),amt:parseInt(f.get("amt"))});e.target.reset();toast("Coins sent.")}catch(x){}};
+$("#p-wallet").onclick=async e=>{if(!("daily" in e.target.dataset))return; try{await api("daily");toast("+50 coins")}catch(x){}};
 
 function renderSettings(){
  const m=me();if(!m)return;
+ if($("#p-settings").contains(document.activeElement)&&document.activeElement.id==="up")return;
  const a=m.avatar||defAv(m.name);
- const sw=(arr,k,cur)=>arr.map((c,i)=>`<button type="button" style="background:${c}" class="${cur===i?"on":""}" data-${k}="${i}" aria-label="${k} option ${i+1}"></button>`).join("");
+ const sw=(arr,k,cur)=>arr.map((c,i)=>`<button type="button" style="background:${c}" class="${cur===i?"on":""}" data-${k}="${i}" aria-label="${k} ${i+1}"></button>`).join("");
  const opt=(arr,k,cur)=>arr.map((n,i)=>`<button type="button" class="${cur===i?"on":""}" data-${k}="${i}">${n}</button>`).join("");
- $("#p-settings").innerHTML=`<div class="set" style="justify-items:center;text-align:center">${avHTML({...m,avatar:a},true)}<b>${esc(m.name)}</b></div>
+ const mode=ls.get("meow-theme")||"system";
+ $("#p-settings").innerHTML=`<div class="set" style="justify-items:center;text-align:center">${avHTML({...m,avatar:a},true)}<b>${esc(m.name)}</b>${m.muted?'<span class="tag bad">muted</span>':""}</div>
+ <h2>Color theme</h2><div class="set"><div class="seg"><button type="button" data-theme="system" class="${mode==="system"?"on":""}">System</button><button type="button" data-theme="light" class="${mode==="light"?"on":""}">Light</button><button type="button" data-theme="dark" class="${mode==="dark"?"on":""}">Dark</button></div><small style="color:var(--mute)">Saved on this device. System follows your phone or computer.</small></div>
  <h2>Profile picture</h2><div class="set"><div class="seg"><button type="button" class="${a.mode!=="photo"?"on":""}" data-mode="cat">Cartoon cat</button><button type="button" class="${a.mode==="photo"?"on":""}" data-mode="photo" ${a.photo?"":"disabled"}>My photo</button></div>
  <label>Upload a picture<input type="file" id="up" accept="image/*"></label>${a.photo?'<button type="button" class="ghost" data-rmphoto>Remove my photo</button>':""}</div>
- <h2>Customize your cat</h2><div class="set"><b>Fur</b><div class="sw">${sw(FUR,"fur",a.fur)}</div><b>Eyes</b><div class="sw">${sw(EYE,"eyes",a.eyes)}</div><b>Pattern</b><div class="seg">${opt(["Plain","Stripes","Patch","Muzzle"],"pat",a.pat)}</div><b>Accessory</b><div class="seg">${opt(["None","Bow","Crown","Glasses","Hat"],"acc",a.acc)}</div><button type="button" class="ghost" data-rand>Surprise me</button></div>
+ <h2>Customize your cat</h2><div class="set"><b>Fur</b><div class="sw">${sw(FUR,"fur",a.fur|0)}</div><b>Eyes</b><div class="sw">${sw(EYE,"eyes",a.eyes|0)}</div><b>Pattern</b><div class="seg">${opt(["Plain","Stripes","Patch","Muzzle"],"pat",a.pat|0)}</div><b>Accessory</b><div class="seg">${opt(["None","Bow","Crown","Glasses","Hat"],"acc",a.acc|0)}</div><button type="button" class="ghost" data-rand>Surprise me</button></div>
  <h2>Display</h2><div class="set"><label class="t"><input type="checkbox" id="showav" ${showAv()?"checked":""}>Show profile pictures in chat</label></div>`;
 }
-async function saveAv(patch){
- const m=me();if(!m)return;
- try{await api("avatar",{...(m.avatar||defAv(m.name)),...patch})}catch(x){}
-}
+async function saveAv(patch){const m=me();if(!m)return; try{await api("avatar",{...(m.avatar||defAv(m.name)),...patch})}catch(x){}}
 $("#p-settings").onclick=e=>{
  const b=e.target.closest("button"),d=b&&b.dataset;if(!d)return;const r=n=>Math.floor(Math.random()*n);
- if(d.mode)saveAv({mode:d.mode});
+ if(d.theme){applyTheme(d.theme); if(me())renderSettings()}
+ else if(d.mode)saveAv({mode:d.mode});
  else if(d.fur!==undefined)saveAv({mode:"cat",fur:+d.fur});
  else if(d.eyes!==undefined)saveAv({mode:"cat",eyes:+d.eyes});
  else if(d.pat!==undefined)saveAv({mode:"cat",pat:+d.pat});
@@ -269,21 +573,27 @@ $("#p-settings").onchange=e=>{
   };img.onerror=()=>toast("Couldn’t read that image");img.src=rd.result};rd.readAsDataURL(f);
  }
 };
-$("#p-wallet").onclick=async e=>{
- if(!("daily" in e.target.dataset))return;
- try{await api("daily");toast("+50 coins")}catch(x){}
-};
 
 function renderAdmin(){
  const box=$("#p-admin");if(!isAdmin()){box.innerHTML="";return}
- if(box.contains(document.activeElement)&&document.activeElement.tagName==="INPUT")return;
+ if(box.contains(document.activeElement)&&(document.activeElement.tagName==="INPUT"||document.activeElement.tagName==="TEXTAREA"))return;
  const ps=Object.entries(players).sort((a,b)=>a[1].name.localeCompare(b[1].name));
- box.innerHTML=`<h2>Add shop item</h2>
- <form id="af" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div>
- <input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" placeholder="Price" required><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div><button>Add item</button></form>
- <h2>Items</h2>${Object.entries(items).map(([id,i])=>`<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>🪙 ${i.price}</small></div><button class="bad" data-rm="${id}">Remove</button></div>`).join("")||'<div class="empty">No items.</div>'}
- <h2>Players</h2>${ps.map(([id,p])=>{const R=meId===ROOT,self=id===ROOT;return `<div class="card" style="flex-wrap:wrap"><div class="i"><b>${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}${p.banned?'<span class="tag" style="background:var(--danger);color:#fff">banned</span>':""}<small>🪙 ${self?"∞":p.coins}</small></div>${self?"":`<button class="ghost" data-adm="${id}">${p.admin?"Remove admin":"Make admin"}</button>`}${R&&!self?`<div class="row" style="flex-basis:100%"><input type="number" placeholder="Coins (− takes)" data-amt="${id}"><button data-give="${id}">Give</button><button class="${p.banned?"ghost":"bad"}" data-ban="${id}">${p.banned?"Unban":"Ban"}</button></div>`:""}</div>`}).join("")}
- <h2>Chat</h2><button class="bad" data-clear>Clear all messages</button>`;
+ const reports=(me().reports||[]).filter(r=>r.status==="open");
+ box.innerHTML=`<h2>Reports ${reports.length?`<span class="badge">${reports.length}</span>`:""}</h2>
+ ${reports.length?reports.map(r=>`<div class="card" style="align-items:flex-start;flex-wrap:wrap"><div class="i"><b>${esc(r.kind)} · ${esc(r.target)}</b><small>From ${esc(r.reporter)} · ${esc(r.excerpt||"")}</small><div>${esc(r.reason)}</div></div>
+  <button type="button" class="ghost tiny" data-dismiss="${r.id}">Dismiss</button>
+  ${r.kind==="message"?`<button type="button" class="tiny bad" data-rdel="${r.id}">Delete message</button>`:""}
+  <button type="button" class="ghost tiny" data-rmute="${r.id}" data-hours="1">Mute 1h</button>
+  <button type="button" class="ghost tiny" data-rmute="${r.id}" data-hours="24">Mute 1d</button>
+  <button type="button" class="ghost tiny" data-rmute="${r.id}" data-hours="0">Mute</button>
+  ${meId===ROOT?`<button type="button" class="tiny bad" data-rban="${r.id}">Ban</button>`:""}
+ </div>`).join(""):'<div class="empty">No open reports.</div>'}
+ <h2>Add shop item</h2>
+ <form id="af" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4" aria-label="Emoji"><input name="name" placeholder="Item name" required maxlength="40" aria-label="Item name"></div>
+ <input name="desc" placeholder="Description" maxlength="80" aria-label="Description"><div class="row"><input name="price" type="number" min="1" placeholder="Price" required aria-label="Price"><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)" aria-label="Stock"></div><button>Add item</button></form>
+ <h2>Items</h2>${Object.entries(items).map(([id,i])=>`<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>${i.price} coins</small></div><button class="bad" type="button" data-rm="${id}">Remove</button></div>`).join("")||'<div class="empty">No items.</div>'}
+ <h2>Players</h2>${ps.map(([id,p])=>{const R=meId===ROOT,self=id===ROOT;return `<div class="card" style="flex-wrap:wrap"><div class="i"><b>${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}${p.banned?'<span class="tag bad">banned</span>':""}${p.muted?'<span class="tag bad">muted</span>':""}<small>${self?"∞":p.coins} coins</small></div>${self?"":`<button class="ghost" type="button" data-adm="${id}">${p.admin?"Remove admin":"Make admin"}</button><button class="ghost" type="button" data-mute="${id}">${p.muted?"Unmute":"Mute 1d"}</button>`}${R&&!self?`<div class="row" style="flex-basis:100%"><input type="number" placeholder="Coins (− takes)" data-amt="${id}" aria-label="Coins for ${esc(p.name)}"><button type="button" data-give="${id}">Give</button><button type="button" class="${p.banned?"ghost":"bad"}" data-ban="${id}">${p.banned?"Unban":"Ban"}</button></div>`:""}</div>`}).join("")}
+ <h2>Chat</h2><button class="bad" type="button" data-clear>Clear all messages</button>`;
 }
 $("#p-admin").onsubmit=async e=>{
  e.preventDefault();if(!isAdmin())return;const f=new FormData(e.target);
@@ -292,10 +602,15 @@ $("#p-admin").onsubmit=async e=>{
 $("#p-admin").onclick=async e=>{
  if(!isAdmin())return;const d=e.target.dataset;
  try{
-  if(d.rm)await api("item/remove",{id:d.rm});
+  if(d.dismiss)await api("report/dismiss",{id:+d.dismiss});
+  else if(d.rdel)await api("report/act",{id:+d.rdel,action:"delete"});
+  else if(d.rmute)await api("report/act",{id:+d.rmute,action:"mute",hours:+d.hours});
+  else if(d.rban)await api("report/act",{id:+d.rban,action:"ban"});
+  else if(d.rm)await api("item/remove",{id:d.rm});
   else if(d.adm)await api("admin/promote",{to:d.adm});
-  else if(d.give&&meId===ROOT){const n=parseInt(document.querySelector(`[data-amt="${d.give}"]`).value);if(!n)return toast("Enter an amount");await api("admin/give",{to:d.give,n})}
-  else if(d.ban&&meId===ROOT)await api("admin/ban",{to:d.ban});
+  else if(d.mute)await api("admin/mute",{to:d.mute,hours:24});
+  else if(d.give&&meId===ROOT){const n=parseInt(document.querySelector(`[data-amt="${CSS.escape(d.give)}"]`).value);if(!n)return toast("Enter an amount");await api("admin/give",{to:d.give,n})}
+  else if(d.ban&&meId===ROOT)await api(d.ban&&players[d.ban]&&players[d.ban].banned?"admin/unban":"admin/ban",{to:d.ban});
   else if("clear" in d){const b=e.target;if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Click again to delete everything";setTimeout(()=>{b.dataset.sure="";b.textContent="Clear all messages"},3000)}else await api("admin/clear")}
  }catch(x){}
 };
