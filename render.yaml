@@ -10,6 +10,8 @@ services:
     envVars:
       - key: ADMIN_PASSWORD
         generateValue: true
+      - key: ADMIN_NAME
+        value: sushi_catie
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

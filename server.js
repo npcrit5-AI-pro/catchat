@@ -1,6 +1,12 @@
 const http=require("node:http"),fs=require("node:fs"),path=require("node:path"),crypto=require("node:crypto");
 const {DatabaseSync}=require("node:sqlite");
-const ROOT="meowmaster100",PORT=+process.env.PORT||8080,DATA=process.env.DATA_DIR||"/tmp/catchat";
+const LEGACY_ROOT="meowmaster100";
+// The root admin's login name. Configurable so production can use a different
+// name (e.g. ADMIN_NAME=sushi_catie on Render). ids are always lowercase;
+// the same letters/numbers/underscores rule as signup applies.
+const RAW_ADMIN_NAME=(process.env.ADMIN_NAME||LEGACY_ROOT).trim();
+if(!/^[A-Za-z0-9_]{2,16}$/.test(RAW_ADMIN_NAME)){console.error("ADMIN_NAME must be 2–16 letters, numbers or underscores");process.exit(1)}
+const ROOT=RAW_ADMIN_NAME.toLowerCase(),PORT=+process.env.PORT||8080,DATA=process.env.DATA_DIR||"/tmp/catchat";
 // Never commit a real password here: set ADMIN_PASSWORD in the environment
 // (on Render: dashboard > service > Environment). Without one we generate an
 // ephemeral password so the app still boots for local dev, and print it once.
@@ -16,7 +22,7 @@ CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT,name TE
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,pid TEXT,ts INTEGER);
 CREATE TABLE IF NOT EXISTS blocked(id TEXT PRIMARY KEY);`);
 try{db.exec("ALTER TABLE items ADD COLUMN kind TEXT DEFAULT 'normal'")}catch(e){}
-try{db.exec("ALTER TABLE players ADD COLUMN infinite INTEGER DEFAULT 0");db.exec("UPDATE players SET infinite=1 WHERE id='meowmaster100'")}catch(e){}
+try{db.exec("ALTER TABLE players ADD COLUMN infinite INTEGER DEFAULT 0");q("UPDATE players SET infinite=1 WHERE id=?").run(ROOT)}catch(e){}
 try{db.exec("ALTER TABLE items ADD COLUMN seller TEXT DEFAULT ''")}catch(e){}
 const MAX_SELL=5;
 const q=s=>db.prepare(s);
@@ -65,9 +71,13 @@ const bad=m=>{throw new E(m)};
 const find=id=>q("SELECT * FROM players WHERE id=?").get(String(id||"").toLowerCase());
 
 // The admin account always uses ADMIN_PASSWORD; nobody else can register that name.
+// Safe migration: if the database (e.g. restored from backup) still has the
+// previous hardcoded root, it is demoted to a normal player — its coins,
+// items and messages are kept — so only the configured ADMIN_NAME has root.
 {const salt=crypto.randomBytes(16).toString("hex"),h=hashPw(ADMIN_PW,salt);
- if(find(ROOT))q("UPDATE players SET salt=?,hash=?,admin=1,banned=0 WHERE id=?").run(salt,h,ROOT);
- else q("INSERT INTO players(id,name,salt,hash,admin,infinite) VALUES(?,?,?,?,1,1)").run(ROOT,ROOT,salt,h);
+ if(find(ROOT))q("UPDATE players SET salt=?,hash=?,admin=1,infinite=1,banned=0 WHERE id=?").run(salt,h,ROOT);
+ else q("INSERT INTO players(id,name,salt,hash,admin,infinite) VALUES(?,?,?,?,1,1)").run(ROOT,RAW_ADMIN_NAME,salt,h);
+ if(ROOT!==LEGACY_ROOT)q("UPDATE players SET admin=0,infinite=0 WHERE id=?").run(LEGACY_ROOT);
  q("DELETE FROM sessions WHERE ts<?").run(Date.now()-30*864e5)}
 
 const fails=new Map();
@@ -210,6 +220,7 @@ http.createServer(async(req,res)=>{
    if(url.pathname==="/"||url.pathname==="/index.html"){
     res.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Content-Security-Policy":CSP,"Referrer-Policy":"no-referrer",...SEC});return res.end(INDEX)}
    if(url.pathname==="/healthz"){res.writeHead(200,{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store",...SEC});return res.end("ok")}
+   if(url.pathname==="/api/config")return J(res,200,{root:ROOT,maxSell:MAX_SELL});
    if(url.pathname==="/api/me"){const p=auth(req,url);return p?J(res,200,{id:p.id}):J(res,401,{error:"auth"})}
    if(url.pathname==="/events"){const p=auth(req,url);if(!p)return J(res,401,{error:"auth"});
     res.writeHead(200,{"Content-Type":"text/event-stream","Cache-Control":"no-cache","X-Accel-Buffering":"no"});
