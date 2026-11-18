@@ -1,7 +1,11 @@
 const http=require("node:http"),fs=require("node:fs"),path=require("node:path"),crypto=require("node:crypto");
 const {DatabaseSync}=require("node:sqlite");
 const ROOT="meowmaster100",PORT=+process.env.PORT||8080,DATA=process.env.DATA_DIR||"/tmp/catchat";
-const ADMIN_PW=process.env.ADMIN_PASSWORD||"110921-fury";
+// Never commit a real password here: set ADMIN_PASSWORD in the environment
+// (on Render: dashboard > service > Environment). Without one we generate an
+// ephemeral password so the app still boots for local dev, and print it once.
+let ADMIN_PW=process.env.ADMIN_PASSWORD||"";
+if(!ADMIN_PW){ADMIN_PW=crypto.randomBytes(12).toString("hex");console.warn("WARNING: ADMIN_PASSWORD is not set. Generated an ephemeral admin password for this boot only: "+ADMIN_PW)}
 if(ADMIN_PW.length<6){console.error("Set ADMIN_PASSWORD (6+ characters), add it under Environment on your host");process.exit(1)}
 fs.mkdirSync(DATA,{recursive:true});
 const db=new DatabaseSync(path.join(DATA,"meow.db"));
@@ -69,6 +73,16 @@ const find=id=>q("SELECT * FROM players WHERE id=?").get(String(id||"").toLowerC
 const fails=new Map();
 const blocked=k=>(fails.get(k)||[]).filter(t=>Date.now()-t<6e5).length>=8;
 const strike=k=>fails.set(k,[...(fails.get(k)||[]).filter(t=>Date.now()-t<6e5),Date.now()]);
+// Generic per-IP throttle for POST /api/*: 180 requests per minute per IP.
+const apiHits=new Map();
+function throttled(ip){
+ const now=Date.now(),w=6e4,arr=(apiHits.get(ip)||[]).filter(t=>now-t<w);
+ arr.push(now);apiHits.set(ip,arr);
+ if(apiHits.size>5000)for(const k of apiHits.keys()){if((apiHits.get(k)||[]).every(t=>now-t<w))apiHits.delete(k);if(apiHits.size<4000)break}
+ return arr.length>180;
+}
+// Slice by code point so emoji (surrogate pairs) are never split in half.
+const emoji=s=>Array.from(String(s||"").trim()).slice(0,2).join("")||"🎁";
 const lastMsg=new Map();
 
 function login(b,ip){
@@ -107,7 +121,7 @@ const actions={
  send(p,b){const t=String(b.text||"").trim().slice(0,300);if(!t)bad("Empty message");
   if(Date.now()-(lastMsg.get(p.id)||0)<500)bad("Slow down");lastMsg.set(p.id,Date.now());post(p.name,t,0)},
  pay(p,b){const t=find(b.to),n=parseInt(b.amt);
-  if(!t||t.banned||t.id===p.id)bad("Pick another player by name");if(!(n>0))bad("Enter an amount");
+  if(!t||t.banned||t.id===p.id)bad("Pick another player by name");if(!(n>=1&&n<=1e9))bad("Enter an amount between 1 and 1,000,000,000");
   if(!inf(p)){if(p.coins<n)bad("You don’t have that many coins");q("UPDATE players SET coins=coins-? WHERE id=?").run(n,p.id)}
   q("UPDATE players SET coins=coins+? WHERE id=?").run(n,t.id);post(p.name,`${p.name} sent ${n} coins to ${t.name}`)},
  daily(p){if(Date.now()-p.daily<864e5)bad("Daily bonus isn’t ready yet");q("UPDATE players SET coins=coins+50,daily=? WHERE id=?").run(Date.now(),p.id)},
@@ -121,7 +135,7 @@ const actions={
  "item/sell"(p,b){const name=String(b.name||"").trim().slice(0,40);if(!name)bad("Give your item a name");
   const price=parseInt(b.price);if(!(price>=1&&price<=1e6))bad("Price must be between 1 and 1,000,000");
   if(!p.admin&&q("SELECT COUNT(*) c FROM items WHERE seller=? AND stock!=0").get(p.id).c>=MAX_SELL)bad(`You can only have ${MAX_SELL} items for sale at once`);
-  q("INSERT INTO items(name,emoji,descr,price,stock,kind,seller) VALUES(?,?,?,?,1,'normal',?)").run(name,String(b.emoji||"").trim().slice(0,4)||"🎁",String(b.desc||"").trim().slice(0,80),price,p.id)},
+  q("INSERT INTO items(name,emoji,descr,price,stock,kind,seller) VALUES(?,?,?,?,1,'normal',?)").run(name,emoji(b.emoji),String(b.desc||"").trim().slice(0,80),price,p.id)},
  "item/cancel"(p,b){const i=q("SELECT * FROM items WHERE id=?").get(parseInt(b.id));
   if(!i||i.seller!==p.id||i.stock===0)bad("You can’t cancel that");q("DELETE FROM items WHERE id=?").run(i.id)},
  avatar(p,b){
@@ -138,7 +152,7 @@ const actions={
   if(--inv[i.id]<=0)delete inv[i.id];
   const got=Math.floor(i.price*0.7);
   q("UPDATE players SET coins=coins+?,inv=? WHERE id=?").run(got,JSON.stringify(inv),p.id);
-  if(i.stock>=0)q("UPDATE items SET stock=stock+1 WHERE id=?").run(i.id);
+  if(i.stock>0)q("UPDATE items SET stock=stock+1 WHERE id=?").run(i.id);
   post(p.name,`${p.name} sold a ${i.emoji} ${i.name} for ${got} coins`)},
  discard(p,b){const i=q("SELECT * FROM items WHERE id=?").get(parseInt(b.id));
   if(!i||i.kind!=="fun")bad("You can only get rid of fun items");
@@ -147,12 +161,12 @@ const actions={
   q("UPDATE players SET inv=? WHERE id=?").run(JSON.stringify(inv),p.id);post(p.name,`${p.name} got rid of a ${i.emoji} ${i.name}`)},
  infinite(p,b){root(p);q("UPDATE players SET infinite=? WHERE id=?").run(b.on?1:0,p.id)},
  "item/add"(p,b){adm(p);const name=String(b.name||"").trim().slice(0,40);if(!name)bad("Give the item a name");
-  const st=parseInt(b.stock);
-  q("INSERT INTO items(name,emoji,descr,price,stock,kind) VALUES(?,?,?,?,?,?)").run(name,String(b.emoji||"").trim().slice(0,4)||"🎁",String(b.desc||"").trim().slice(0,80),Math.max(1,parseInt(b.price)||1),st>0?st:-1,["physical","fun"].includes(b.kind)?b.kind:"normal")},
+  const st=parseInt(b.stock),price=Math.max(1,Math.min(1e6,parseInt(b.price)||1));
+  q("INSERT INTO items(name,emoji,descr,price,stock,kind) VALUES(?,?,?,?,?,?)").run(name,emoji(b.emoji),String(b.desc||"").trim().slice(0,80),price,st>0?st:-1,["physical","fun"].includes(b.kind)?b.kind:"normal")},
  "item/remove"(p,b){adm(p);q("DELETE FROM items WHERE id=?").run(parseInt(b.id))},
  "admin/promote"(p,b){adm(p);const t=find(b.to);if(!t||t.id===ROOT)bad("You can’t change that player");
   q("UPDATE players SET admin=? WHERE id=?").run(t.admin?0:1,t.id);post(p.name,`${t.name} ${t.admin?"is no longer":"is now"} an admin`)},
- "admin/give"(p,b){root(p);const t=find(b.to),n=parseInt(b.n);if(!t||!n)bad("Pick a player and an amount");
+ "admin/give"(p,b){root(p);const t=find(b.to),n=parseInt(b.n);if(!t||!(Math.abs(n)>=1&&Math.abs(n)<=1e9))bad("Pick a player and an amount");
   q("UPDATE players SET coins=MAX(0,coins+?) WHERE id=?").run(n,t.id);post(p.name,`${p.name} ${n>0?"gave":"took"} ${Math.abs(n)} coins ${n>0?"to":"from"} ${t.name}`)},
  "admin/ban"(p,b){root(p);const t=find(b.to);if(!t||t.id===ROOT)bad("You can’t ban that player");
   q("INSERT OR IGNORE INTO blocked(id) VALUES(?)").run(t.id);wipe(t.id);post(p.name,`${t.name} was banned`);return{kick:t.id,reason:"banned"}},
@@ -180,8 +194,10 @@ setInterval(()=>{for(const c of clients)c.res.write(": ping\n\n")},25000);
 
 // ---- http
 const INDEX=fs.readFileSync(path.join(__dirname,"index.html"));
-const CSP="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'";
-const J=(res,code,o)=>{res.writeHead(code,{"Content-Type":"application/json"});res.end(JSON.stringify(o))};
+const CSP="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+const SEC={"X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer","X-Frame-Options":"DENY","Permissions-Policy":"camera=(), microphone=(), geolocation=()","Cross-Origin-Opener-Policy":"same-origin","Cross-Origin-Resource-Policy":"same-origin"};
+const clientIp=req=>(req.headers["x-forwarded-for"]||"").split(",")[0].trim()||req.headers["fly-client-ip"]||req.socket.remoteAddress||"";
+const J=(res,code,o)=>{res.writeHead(code,{"Content-Type":"application/json","Cache-Control":"no-store",...SEC});res.end(JSON.stringify(o))};
 const readBody=req=>new Promise((ok,no)=>{let n=0;const c=[];
  req.on("data",d=>{n+=d.length;if(n>150e3){no(new E("That’s too large"));req.destroy()}else c.push(d)});
  req.on("end",()=>{try{ok(JSON.parse(Buffer.concat(c).toString()||"{}"))}catch(e){no(new E("Bad request"))}});
@@ -192,8 +208,8 @@ http.createServer(async(req,res)=>{
  try{
   if(req.method==="GET"){
    if(url.pathname==="/"||url.pathname==="/index.html"){
-    res.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Content-Security-Policy":CSP,"X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer"});return res.end(INDEX)}
-   if(url.pathname==="/healthz")return res.end("ok");
+    res.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Content-Security-Policy":CSP,"Referrer-Policy":"no-referrer",...SEC});return res.end(INDEX)}
+   if(url.pathname==="/healthz"){res.writeHead(200,{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store",...SEC});return res.end("ok")}
    if(url.pathname==="/api/me"){const p=auth(req,url);return p?J(res,200,{id:p.id}):J(res,401,{error:"auth"})}
    if(url.pathname==="/events"){const p=auth(req,url);if(!p)return J(res,401,{error:"auth"});
     res.writeHead(200,{"Content-Type":"text/event-stream","Cache-Control":"no-cache","X-Accel-Buffering":"no"});
@@ -205,7 +221,9 @@ http.createServer(async(req,res)=>{
   }
   if(req.method==="POST"&&url.pathname.startsWith("/api/")){
    const act=url.pathname.slice(5),b=await readBody(req);
-   if(act==="login"){const ip=req.headers["fly-client-ip"]||req.socket.remoteAddress;const r=login(b,ip);push();return J(res,200,r)}
+   const ip=clientIp(req);
+   if(throttled(ip))return J(res,429,{error:"Too many requests. Slow down."});
+   if(act==="login"){const r=login(b,ip);push();return J(res,200,r)}
    const p=auth(req,url);if(!p)return J(res,401,{error:"auth"});
    if(act==="logout"){q("DELETE FROM sessions WHERE token=?").run((req.headers.authorization||"").replace(/^Bearer /,""));scheduleSave();return J(res,200,{ok:1})}
    if(!Object.hasOwn(actions,act))return J(res,404,{error:"Unknown action"});

@@ -1,0 +1,19 @@
+{
+  "name": "catchat",
+  "version": "1.1.0",
+  "description": "CatChat — a tiny cat-themed chat room with coins, a shop, and avatars.",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "test": "node --test tests/*.test.js",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer-core": "^25.18.1"
+  }
+}

@@ -90,11 +90,11 @@ body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settin
   <section class="pane scroll" id="p-admin"></section>
  </main>
 </div>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const ROOT="meowmaster100", $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let meId=null,players={},items={},msgs=[],tab="chat",started=false;
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const me=()=>players[meId], isAdmin=()=>!!(me()&&me().admin);
@@ -115,6 +115,8 @@ function avHTML(p,big){
 }
 const showAv=()=>ls.get("meow-showav")!=="0";
 const applyAv=()=>document.body.classList.toggle("noav",!showAv());
+function applyTheme(){const t=ls.get("meow-theme")||"system";document.documentElement.dataset.theme=t==="system"?"":t}
+applyTheme();
 function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2600)}
 function fail(t){$("#err").textContent=t}
 
@@ -223,7 +225,7 @@ function renderWallet(){
  if(box.contains(document.activeElement)&&document.activeElement.tagName==="INPUT")return;
  const R=meId===ROOT,left=864e5-(Date.now()-(m.daily||0));
  const inv=Object.entries(m.inv||{}).filter(([id])=>items[id]);
- const isR=p=>p.name.toLowerCase()===ROOT;
+ const isR=p=>p.id===ROOT;
  const top=Object.values(players).filter(p=>!p.banned).sort((a,b)=>isR(b)-isR(a)||b.coins-a.coins).slice(0,8);
  const names=Object.values(players).filter(p=>p.name.toLowerCase()!==meId&&!p.banned);
  box.innerHTML=`<div class="set" style="text-align:center"><small style="color:var(--mute)">Your balance</small><div class="big-bal">🪙 ${R?"∞":m.coins}</div><button data-daily ${left>0?"disabled":""}>${left>0?`Daily bonus in ${Math.ceil(left/36e5)}h`:"Claim 50 daily coins"}</button></div>
@@ -242,7 +244,7 @@ function renderSettings(){
  <h2>Profile picture</h2><div class="set"><div class="seg"><button type="button" class="${a.mode!=="photo"?"on":""}" data-mode="cat">Cartoon cat</button><button type="button" class="${a.mode==="photo"?"on":""}" data-mode="photo" ${a.photo?"":"disabled"}>My photo</button></div>
  <label>Upload a picture<input type="file" id="up" accept="image/*"></label>${a.photo?'<button type="button" class="ghost" data-rmphoto>Remove my photo</button>':""}</div>
  <h2>Customize your cat</h2><div class="set"><b>Fur</b><div class="sw">${sw(FUR,"fur",a.fur)}</div><b>Eyes</b><div class="sw">${sw(EYE,"eyes",a.eyes)}</div><b>Pattern</b><div class="seg">${opt(["Plain","Stripes","Patch","Muzzle"],"pat",a.pat)}</div><b>Accessory</b><div class="seg">${opt(["None","Bow","Crown","Glasses","Hat"],"acc",a.acc)}</div><button type="button" class="ghost" data-rand>Surprise me</button></div>
- <h2>Display</h2><div class="set"><label class="t"><input type="checkbox" id="showav" ${showAv()?"checked":""}>Show profile pictures in chat</label></div>`;
+ <h2>Display</h2><div class="set"><label class="t"><input type="checkbox" id="showav" ${showAv()?"checked":""}>Show profile pictures in chat</label><div class="seg" role="group" aria-label="Theme">${["system","light","dark"].map(t=>`<button type="button" class="${(ls.get("meow-theme")||"system")===t?"on":""}" data-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>`;
 }
 async function saveAv(patch){
  const m=me();if(!m)return;
@@ -257,6 +259,7 @@ $("#p-settings").onclick=e=>{
  else if(d.acc!==undefined)saveAv({mode:"cat",acc:+d.acc});
  else if(d.rand!==undefined)saveAv({mode:"cat",fur:r(FUR.length),eyes:r(EYE.length),pat:r(PAT.length),acc:r(ACC.length)});
  else if(d.rmphoto!==undefined)saveAv({mode:"cat",photo:""});
+ else if(d.theme!==undefined){ls.set("meow-theme",d.theme);applyTheme();renderSettings()}
 };
 $("#p-settings").onchange=e=>{
  if(e.target.id==="showav"){ls.set("meow-showav",e.target.checked?"1":"0");applyAv()}
@@ -283,6 +286,7 @@ function renderAdmin(){
  <input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" placeholder="Price" required><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div><button>Add item</button></form>
  <h2>Items</h2>${Object.entries(items).map(([id,i])=>`<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>🪙 ${i.price}</small></div><button class="bad" data-rm="${id}">Remove</button></div>`).join("")||'<div class="empty">No items.</div>'}
  <h2>Players</h2>${ps.map(([id,p])=>{const R=meId===ROOT,self=id===ROOT;return `<div class="card" style="flex-wrap:wrap"><div class="i"><b>${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}${p.banned?'<span class="tag" style="background:var(--danger);color:#fff">banned</span>':""}<small>🪙 ${self?"∞":p.coins}</small></div>${self?"":`<button class="ghost" data-adm="${id}">${p.admin?"Remove admin":"Make admin"}</button>`}${R&&!self?`<div class="row" style="flex-basis:100%"><input type="number" placeholder="Coins (− takes)" data-amt="${id}"><button data-give="${id}">Give</button><button class="${p.banned?"ghost":"bad"}" data-ban="${id}">${p.banned?"Unban":"Ban"}</button></div>`:""}</div>`}).join("")}
+ ${meId===ROOT?`<h2>Banned names</h2>${(me().blocked&&me().blocked.length)?me().blocked.map(id=>`<div class="card"><div class="i"><b>${esc(id)}</b><small>Banned from signing up</small></div><button class="ghost" data-unban="${esc(id)}">Unban</button></div>`).join(""):'<div class="empty">Nobody is banned.</div>'}`:""}
  <h2>Chat</h2><button class="bad" data-clear>Clear all messages</button>`;
 }
 $("#p-admin").onsubmit=async e=>{
@@ -296,6 +300,7 @@ $("#p-admin").onclick=async e=>{
   else if(d.adm)await api("admin/promote",{to:d.adm});
   else if(d.give&&meId===ROOT){const n=parseInt(document.querySelector(`[data-amt="${d.give}"]`).value);if(!n)return toast("Enter an amount");await api("admin/give",{to:d.give,n})}
   else if(d.ban&&meId===ROOT)await api("admin/ban",{to:d.ban});
+  else if(d.unban&&meId===ROOT){await api("admin/unban",{to:d.unban});toast("Unbanned "+d.unban)}
   else if("clear" in d){const b=e.target;if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Click again to delete everything";setTimeout(()=>{b.dataset.sure="";b.textContent="Clear all messages"},3000)}else await api("admin/clear")}
  }catch(x){}
 };

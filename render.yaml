@@ -1,0 +1,22 @@
+# Render blueprint for CatChat (free plan friendly)
+services:
+  - type: web
+    name: catchat
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev --no-audit --no-fund
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      # DATA_DIR defaults to /tmp/catchat (ephemeral). On the free plan there
+      # are no persistent disks, so Supabase backup above is how data survives
+      # deploys/restarts/spin-downs. Leave unset unless you attach a disk
+      # (paid) and point it at the mount path.
+      # - key: DATA_DIR
+      #   value: /var/data/catchat
