@@ -1,0 +1,7 @@
+node_modules/
+npm-debug.log*
+/tmp/catchat/
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
