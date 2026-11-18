@@ -85,6 +85,8 @@ try {
   await page.screenshot({ path: `${ART}/catchat-settings.png` });
 
   // 7. API-level assertions through the same session
+  const cfg = await (await fetch(BASE + "/api/config")).json();
+  if (!cfg.root || !cfg.maxSell) throw new Error("bad /api/config: " + JSON.stringify(cfg));
   const token = await page.evaluate(() => localStorage.getItem("meow-token"));
   if (!token) throw new Error("no auth token in localStorage");
   const api = (act, body) =>

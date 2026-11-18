@@ -195,3 +195,79 @@ test("live state stream emits a state event", async () => {
   try { await reader.cancel(); } catch {}
   assert.ok(buf.includes("event: state"), "expected a state event from /events");
 });
+
+test("config endpoint reports the root admin name", async () => {
+  const r = await fetch(BASE + "/api/config");
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { root: "meowmaster100", maxSell: 5 });
+});
+
+// Boots throwaway servers sharing one DATA_DIR to prove the ADMIN_NAME
+// migration: old hardcoded root is demoted (data kept), the configured
+// underscore name becomes root, and nobody else can claim it.
+test("ADMIN_NAME with underscores migrates the old root safely", async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "catchat-admname-"));
+  const servers = [];
+  const boot = async (port, extraEnv) => {
+    const s = spawn(process.execPath, ["--no-warnings", "server.js"], {
+      cwd: __dirname + "/..",
+      env: { ...process.env, PORT: String(port), DATA_DIR: dir, ...extraEnv },
+      stdio: "ignore",
+    });
+    servers.push(s);
+    const base = `http://127.0.0.1:${port}`;
+    const t0 = Date.now();
+    for (;;) {
+      try {
+        const r = await fetch(base + "/healthz");
+        if (r.ok) break;
+      } catch {}
+      if (Date.now() - t0 > 15000) throw new Error("server did not boot");
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return base;
+  };
+  const stop = (s) => new Promise((res) => { s.on("exit", res); s.kill("SIGTERM"); setTimeout(res, 3000); });
+  t.after(async () => { for (const s of servers) if (!s.killed) s.kill("SIGTERM"); fs.rmSync(dir, { recursive: true, force: true }); });
+  const lp = (base, act, body, token) =>
+    fetch(base + "/api/" + act, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) },
+      body: JSON.stringify(body || {}),
+    });
+
+  const P1 = PORT + 11, P2 = PORT + 12;
+  // Phase 1: legacy default root owns the database and holds coins.
+  const a = await boot(P1, { ADMIN_PASSWORD: "legacy-admin-pw" });
+  let r = await lp(a, "login", { name: "meowmaster100", pw: "legacy-admin-pw" });
+  assert.equal(r.status, 200);
+  const legacy = await r.json();
+  r = await lp(a, "admin/give", { to: "meowmaster100", n: 777 }, legacy.token);
+  assert.equal(r.status, 200);
+  await stop(servers.pop());
+
+  // Phase 2: same database, ADMIN_NAME=sushi_catie.
+  const b = await boot(P2, { ADMIN_PASSWORD: "new-admin-pw-1", ADMIN_NAME: "sushi_catie" });
+  assert.deepEqual(await (await fetch(b + "/api/config")).json(), { root: "sushi_catie", maxSell: 5 });
+  // New underscore root is created and can log in (case-insensitively).
+  r = await lp(b, "login", { name: "sushi_catie", pw: "new-admin-pw-1" });
+  assert.equal(r.status, 200);
+  const root = await r.json();
+  assert.equal(root.id, "sushi_catie");
+  r = await lp(b, "login", { name: "SUSHI_CATIE", pw: "new-admin-pw-1" });
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).id, "sushi_catie");
+  // Nobody else can register the admin name.
+  r = await lp(b, "login", { name: "sushi_catie", pw: "someone-else-pw" });
+  assert.equal(r.status, 400);
+  // Old root kept its data but lost root powers.
+  r = await lp(b, "login", { name: "meowmaster100", pw: "legacy-admin-pw" });
+  assert.equal(r.status, 200, "old root account data must survive migration");
+  const demoted = await r.json();
+  r = await lp(b, "admin/give", { to: "sushi_catie", n: 1 }, demoted.token);
+  assert.equal(r.status, 400, "demoted account must no longer have root powers");
+  // The new root still rules: it can give coins and ban.
+  r = await lp(b, "admin/give", { to: "meowmaster100", n: 10 }, root.token);
+  assert.equal(r.status, 200);
+  await stop(servers.pop());
+});

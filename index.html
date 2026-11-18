@@ -93,7 +93,9 @@ body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settin
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const ROOT="meowmaster100", $=s=>document.querySelector(s);
+let ROOT="meowmaster100",MAX_SELL=5;const $=s=>document.querySelector(s);
+// The server is the source of truth for the root admin name and listing cap.
+fetch("/api/config").then(r=>r.json()).then(c=>{if(c&&c.root)ROOT=String(c.root).toLowerCase();if(c&&c.maxSell)MAX_SELL=c.maxSell}).catch(()=>{});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let meId=null,players={},items={},msgs=[],tab="chat",started=false;
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
@@ -196,7 +198,6 @@ $("#send").onsubmit=async e=>{
 };
 async function pay(to,amt){await api("pay",{to,amt})}
 
-const MAX_SELL=5;
 function renderShop(){
  const box=$("#p-shop"),m=me();
  if(!$("#sf"))box.innerHTML=`<h2>Sell an item</h2><form id="sf" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div><input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" max="1000000" placeholder="Price" required><button>List for sale</button></div><small id="slots"></small></form><h2>Shop</h2><div id="shoplist" style="display:grid;gap:.7rem"></div>`;

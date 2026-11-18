@@ -13,9 +13,15 @@ ADMIN_PASSWORD='pick-a-long-password' npm start
 # open http://localhost:8080, health check at /healthz
 ```
 
-The first run creates an admin account named `meowmaster100` using
-`ADMIN_PASSWORD`. If `ADMIN_PASSWORD` is unset, the server generates an
-ephemeral one and prints it once (local dev only — set a real one on Render).
+The first run creates the root admin account using `ADMIN_NAME` (default
+`meowmaster100`) and `ADMIN_PASSWORD`. If `ADMIN_PASSWORD` is unset, the
+server generates an ephemeral one and prints it once (local dev only — set a
+real one on Render).
+
+Renaming the root later is safe: on boot the server creates/updates the
+configured root and demotes the previous hardcoded `meowmaster100` account
+to a normal player (its coins, items and messages are kept). Nobody else can
+register the configured admin name.
 
 ## Tests
 
@@ -29,7 +35,8 @@ npm run e2e       # headless-Chrome smoke test + screenshots (needs Chrome)
 | Variable | Required | Purpose |
 |---|---|---|
 | `PORT` | No (defaults to `8080`) | Render sets this automatically; the server binds `0.0.0.0:$PORT`. |
-| `ADMIN_PASSWORD` | **Yes** (production) | Password for the `meowmaster100` admin account. Never commit it — set it under Render dashboard → service → Environment. Without it the server boots with a random ephemeral password. |
+| `ADMIN_PASSWORD` | **Yes** (production) | Password for the root admin account. Never commit it — set it under Render dashboard → service → Environment. Without it the server boots with a random ephemeral password. |
+| `ADMIN_NAME` | No (defaults to `meowmaster100`) | Login name of the root admin account (2–16 letters, numbers, underscores; e.g. `sushi_catie`). Production is set to `sushi_catie` via `render.yaml`. |
 | `SUPABASE_URL` | Recommended | Enables the database backup. Without it data lives only on local disk. |
 | `SUPABASE_SERVICE_KEY` | Recommended | Service-role key for the backup (server-side only, never shipped to the browser). |
 | `DATA_DIR` | No (defaults to `/tmp/catchat`) | Where the SQLite file lives. Only change if you attach a persistent disk. |
