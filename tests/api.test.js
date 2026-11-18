@@ -119,14 +119,14 @@ test("shop: admin adds item, user buys, sells back", async () => {
     root.token
   );
   assert.equal(r.status, 200);
-  r = await post("buy", { id: 1 }, u.token);
+  r = await post("buy", { id: 2 }, u.token); // Test Hat (id 1 is the seeded Scratch)
   assert.equal(r.status, 200);
   // buying own listing is rejected; sell-back pays 70%
   r = await post("item/sell", { name: "Ball", price: 20 }, u.token);
   assert.equal(r.status, 200);
-  r = await post("buy", { id: 2 }, u.token);
+  r = await post("buy", { id: 3 }, u.token);
   assert.equal(r.status, 400); // can't buy your own item
-  r = await post("item/cancel", { id: 2 }, u.token);
+  r = await post("item/cancel", { id: 3 }, u.token);
   assert.equal(r.status, 200);
   // non-admin cannot add shop items
   assert.equal((await post("item/add", { name: "Nope", price: 1 }, u.token)).status, 400);
@@ -270,4 +270,196 @@ test("ADMIN_NAME with underscores migrates the old root safely", async (t) => {
   r = await lp(b, "admin/give", { to: "meowmaster100", n: 10 }, root.token);
   assert.equal(r.status, 200);
   await stop(servers.pop());
+});
+
+// Reads one live state event for a session (used to resolve ids by name).
+async function snap(token) {
+  const ctl = new AbortController();
+  const r = await fetch(BASE + "/events?t=" + encodeURIComponent(token), {
+    headers: { Accept: "text/event-stream" }, signal: ctl.signal,
+  });
+  assert.equal(r.status, 200);
+  const reader = r.body.getReader(), dec = new TextDecoder();
+  let buf = "";
+  const t0 = Date.now();
+  while (Date.now() - t0 < 8000) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const m = buf.match(/event: state\ndata: (\{.*\})\n/);
+    if (m) { ctl.abort(); try { await reader.cancel(); } catch {} return JSON.parse(m[1]); }
+  }
+  ctl.abort(); throw new Error("no state event");
+}
+const itemByName = (s, n) => Object.values(s.items).find((i) => i.name.toLowerCase() === n.toLowerCase());
+
+test("sales: set, buy at sale price, validate, clear", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  const u = await signup("salegal");
+  let r = await post("item/add", { name: "SaleSword", price: 100, stock: 5 }, root.token);
+  assert.equal(r.status, 200);
+  const sword = itemByName(await snap(root.token), "SaleSword");
+  assert.ok(sword);
+  // strangers and bad prices are rejected
+  assert.equal((await post("item/sale", { id: sword.id, price: 40 }, u.token)).status, 400);
+  assert.equal((await post("item/sale", { id: sword.id, price: 100 }, root.token)).status, 400);
+  assert.equal((await post("item/sale", { id: sword.id, price: 200 }, root.token)).status, 400);
+  assert.equal((await post("item/sale", { id: sword.id, price: 40, ends: 999 }, root.token)).status, 400);
+  // set a sale; shopper pays the sale price, not the original
+  assert.equal((await post("item/sale", { id: sword.id, price: 40 }, root.token)).status, 200);
+  const s2 = await snap(root.token);
+  assert.equal(itemByName(s2, "SaleSword").sale, 40);
+  const before = s2.players.find((p) => p.id === "salegal").coins;
+  assert.equal((await post("buy", { id: sword.id }, u.token)).status, 200);
+  const after = (await snap(root.token)).players.find((p) => p.id === "salegal").coins;
+  assert.equal(before - after, 40);
+  // player listings can be put on sale by their owner
+  r = await post("item/sell", { name: "MyRock", price: 50 }, u.token);
+  assert.equal(r.status, 200);
+  const rock = itemByName(await snap(root.token), "MyRock");
+  assert.ok(rock && rock.seller === "salegal");
+  assert.equal((await post("item/sale", { id: rock.id, price: 20 }, u.token)).status, 200);
+  assert.equal(itemByName(await snap(root.token), "MyRock").sale, 20);
+  // clearing restores the original price
+  assert.equal((await post("item/sale", { id: sword.id }, root.token)).status, 200);
+  assert.equal(itemByName(await snap(root.token), "SaleSword").sale, 0);
+});
+
+test("give: move items between players with validation", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  const a = await signup("giver");
+  const b = await signup("getter");
+  await post("admin/give", { to: "giver", n: 500 }, root.token);
+  const rock = itemByName(await snap(root.token), "MyRock");
+  assert.ok(rock);
+  await post("buy", { id: rock.id }, a.token);
+  let r = await post("give", { to: "getter", id: rock.id, n: 1 }, a.token);
+  assert.equal(r.status, 200);
+  const s = await snap(root.token);
+  assert.equal(s.players.find((p) => p.id === "getter").inv[rock.id], 1);
+  // self-give, over-give, unknown players and unknown items are rejected
+  assert.equal((await post("give", { to: "giver", id: rock.id, n: 1 }, a.token)).status, 400);
+  assert.equal((await post("give", { to: "getter", id: rock.id, n: 99 }, a.token)).status, 400);
+  assert.equal((await post("give", { to: "nosuchplayer", id: rock.id, n: 1 }, a.token)).status, 400);
+  assert.equal((await post("give", { to: "getter", id: 999999, n: 1 }, a.token)).status, 400);
+});
+
+test("cats: create, adopt, lead, equip, wild catch, trainer rewards, duels", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  const a = await signup("battler1");
+  const b = await signup("battler2");
+  // admin creates a strong cat and a 1-HP dummy
+  let r = await post("cat/add", { name: "StrongKit", hp: 60, price: 10, type1: "fire", rarity: "rare" }, root.token);
+  assert.equal(r.status, 200);
+  r = await post("cat/add", { name: "WeakKit", hp: 1, price: 0, shop: 0 }, root.token);
+  assert.equal(r.status, 200);
+  let s = await snap(root.token);
+  const strong = s.cats.find((c) => c.name === "StrongKit");
+  const weak = s.cats.find((c) => c.name === "WeakKit");
+  assert.ok(strong && weak && weak.shop === false);
+  // adopt + lead + equip Scratch
+  assert.equal((await post("cat/buy", { id: strong.id }, a.token)).status, 200);
+  assert.equal((await post("cat/buy", { id: 999999 }, a.token)).status, 400);
+  s = await snap(a.token);
+  assert.equal(s.me.cats.length, 1);
+  const own = s.me.cats[0].own;
+  assert.equal((await post("cat/lead", { own: own + 999 }, a.token)).status, 400);
+  assert.equal((await post("cat/lead", { own }, a.token)).status, 200);
+  assert.equal((await snap(a.token)).me.lead, own);
+  const scratch = Object.values(s.items).find((i) => i.kind === "ability" && i.name === "Scratch");
+  assert.ok(scratch, "everyone starts with Scratch");
+  assert.equal((await post("equip", { own, item: scratch.id }, a.token)).status, 200);
+  assert.equal((await post("equip", { own, item: 999999 }, a.token)).status, 400);
+  assert.equal((await post("equip", { own: own + 999, item: scratch.id }, a.token)).status, 400);
+  // wild cat with the 1-HP dummy: guaranteed win and catch
+  r = await post("wild/add", { cat: weak.id, lvl: 1 }, root.token);
+  assert.equal(r.status, 200);
+  s = await snap(root.token);
+  const wild = s.wilds[s.wilds.length - 1];
+  assert.equal((await post("battle/wild", { id: wild.id }, a.token)).status, 200);
+  assert.equal((await snap(a.token)).me.cats.length, 2, "winner catches the wild cat");
+  // trainer with a dummy team: first win pays full reward, later wins 10%
+  r = await post("trainer/add", { name: "DummyBob", reward: 50, team: [{ cat: weak.id, lvl: 1, moves: [] }] }, root.token);
+  assert.equal(r.status, 200);
+  s = await snap(root.token);
+  const tr = s.trainers[s.trainers.length - 1];
+  const c0 = s.players.find((p) => p.id === "battler1").coins;
+  assert.equal((await post("battle/trainer", { id: tr.id }, a.token)).status, 200);
+  const c1 = (await snap(root.token)).players.find((p) => p.id === "battler1").coins;
+  assert.equal(c1 - c0, 50, "first trainer win pays the full reward");
+  assert.equal((await post("battle/trainer", { id: tr.id }, a.token)).status, 200);
+  const c2 = (await snap(root.token)).players.find((p) => p.id === "battler1").coins;
+  assert.equal(c2 - c1, 5, "repeat trainer wins pay 10%");
+  // player duel resolves and transfers the bet
+  assert.equal((await post("cat/buy", { id: strong.id }, b.token)).status, 200);
+  r = await post("battle/player", { to: "battler2", bet: 10 }, a.token);
+  assert.equal(r.status, 200);
+  assert.equal((await post("battle/player", { to: "battler1", bet: 1000000 }, a.token)).status, 400);
+  const msgs = (await snap(a.token)).messages.map((m) => m.text).join("\n");
+  assert.ok(msgs.includes("⚔️"), "duel result is announced in chat");
+});
+
+test("packs: create with drops and open one", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  const u = await signup("packfan");
+  await post("admin/give", { to: "packfan", n: 500 }, root.token);
+  const sword = itemByName(await snap(root.token), "SaleSword");
+  let r = await post("pack/add", { name: "StarterPack", price: 5, data: [{ t: "item", id: sword.id, n: 2, ch: 1 }] }, root.token);
+  assert.equal(r.status, 200);
+  assert.equal((await post("pack/add", { name: "Empty", price: 1, data: [] }, root.token)).status, 400);
+  let s = await snap(root.token);
+  const pack = s.packs.find((k) => k.name === "StarterPack");
+  assert.ok(pack);
+  const before = (s.players.find((p) => p.id === "packfan").inv[sword.id] || 0);
+  assert.equal((await post("pack/buy", { id: pack.id }, u.token)).status, 200);
+  s = await snap(root.token);
+  assert.equal(s.players.find((p) => p.id === "packfan").inv[sword.id] - before, 2);
+  assert.equal(s.packs.find((k) => k.name === "StarterPack").stock, pack.stock > 0 ? pack.stock - 1 : -1);
+});
+
+test("trades: offer, accept, decline, cancel, validation", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  const a = await signup("trader_a");
+  const b = await signup("trader_b");
+  await post("admin/give", { to: "trader_a", n: 500 }, root.token);
+  const sword = itemByName(await snap(root.token), "SaleSword");
+  await post("buy", { id: sword.id }, a.token);
+  await post("buy", { id: sword.id }, a.token);
+  // offering what you don't own is rejected; a gift (empty want) is fine
+  let r = await post("trade/send", { to: "trader_b", give: { items: { [sword.id]: 99 }, cats: [] }, want: { items: {}, cats: [] } }, b.token);
+  assert.equal(r.status, 400);
+  r = await post("trade/send", { to: "trader_a", give: { items: {}, cats: [] }, want: { items: {}, cats: [] } }, b.token);
+  assert.equal(r.status, 400);
+  r = await post("trade/send", { to: "trader_b", give: { items: { [sword.id]: 1 }, cats: [] }, want: { items: {}, cats: [] } }, a.token);
+  assert.equal(r.status, 200);
+  let s = await snap(b.token);
+  const offer = s.me.trades.find((t) => t.frm === "trader_a");
+  assert.ok(offer);
+  // strangers cannot answer; recipient can decline
+  assert.equal((await post("trade/answer", { id: offer.id, ok: true }, a.token)).status, 400);
+  assert.equal((await post("trade/answer", { id: offer.id }, b.token)).status, 200);
+  assert.ok(!(await snap(b.token)).me.trades.some((t) => t.id === offer.id), "declined offers leave the inbox");
+  // accept moves the item
+  await post("trade/send", { to: "trader_b", give: { items: { [sword.id]: 1 }, cats: [] }, want: { items: {}, cats: [] } }, a.token);
+  s = await snap(b.token);
+  const offer2 = s.me.trades.find((t) => t.frm === "trader_a");
+  assert.equal((await post("trade/answer", { id: offer2.id, ok: true }, b.token)).status, 200);
+  s = await snap(root.token);
+  assert.equal(s.players.find((p) => p.id === "trader_b").inv[sword.id], 1);
+  // cancel removes your own offer
+  await post("trade/send", { to: "trader_b", give: { items: { [sword.id]: 1 }, cats: [] }, want: { items: {}, cats: [] } }, a.token);
+  s = await snap(a.token);
+  const offer3 = s.me.trades.find((t) => t.frm === "trader_a");
+  assert.equal((await post("trade/cancel", { id: offer3.id }, a.token)).status, 200);
+  assert.ok(!(await snap(a.token)).me.trades.some((t) => t.id === offer3.id), "cancelled offers disappear");
+});
+
+test("banned username words are enforced and removable", async () => {
+  const root = await signup("meowmaster100", ADMIN_PW);
+  assert.equal((await post("word/add", { word: "zork" }, root.token)).status, 200);
+  let r = await post("login", { name: "zorkfan", pw: "password123" });
+  assert.equal(r.status, 400);
+  assert.equal((await post("word/remove", { word: "zork" }, root.token)).status, 200);
+  r = await post("login", { name: "zorkfan", pw: "password123" });
+  assert.equal(r.status, 200);
 });

@@ -5,6 +5,15 @@ Zero runtime dependencies — just Node.js + the built-in SQLite module
 (`node:sqlite`). Live updates use Server-Sent Events; the whole database is
 backed up to Supabase so it survives hosts with ephemeral filesystems.
 
+Tabs: **Chat** (with `/pay`, `/buy`, `/give`, `/help` slash commands and
+autocomplete), **Shop** (items, packs, cats — with sales), **Battle** (lead
+cats, player duels with coin bets, wild cats to catch, NPC trainers, ability
+shop), **Trade** (item/cat offers with accept/decline), **Wallet** (balance,
+send coins, items, cats with XP/levels/evolution, equipped abilities,
+leaderboard), **Settings** (avatar builder, theme, delete account),
+**Admin** (shop items, cats, packs, wild cats, trainers, players, banned
+username words, clear chat).
+
 ## Run locally
 
 ```bash
@@ -29,6 +38,27 @@ register the configured admin name.
 npm test          # API tests (node:test, no extra deps)
 npm run e2e       # headless-Chrome smoke test + screenshots (needs Chrome)
 ```
+
+## Game notes
+
+- **Sales:** sellers can put their own listings on sale and admins any shop
+  item (`item/sale` with a sale price below the current price and an
+  optional end in hours). The shop strikes through the original price, shows
+  the sale price with a SALE badge, and buying charges the sale price.
+- **Slash commands:** `/pay name amount`, `/buy item [qty]` (uses the sale
+  price), `/give player item [qty]`, `/help`. Names match exactly, then by
+  prefix. Start typing `/` for autocomplete.
+- **Cats & battles:** admins create cats (HP, types, rarity, evolution) and
+  wild cats/trainers; players adopt cats, pick a lead, equip one ability per
+  cat (everyone starts with a free Scratch), earn XP per battle, level up
+  (40 XP/level) and auto-evolve. Duels, wild wins (catch + coins) and first
+  trainer wins (full reward, 10% after) are announced in chat.
+- **Trades & packs:** trade any owned items/cats with accept/decline/cancel
+  (validated on accept); packs grant a weighted-random drop on purchase.
+- **Banned username words:** admins add/remove words; signups containing
+  one are rejected.
+- Backups include all new tables; old backups restore cleanly (missing
+  tables/columns fall back to defaults).
 
 ## Environment variables
 

@@ -2,75 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=no">
 <title>CatChat</title>
 <style>
-:root{--bg:#f5f2ff;--panel:#fff;--ink:#1d1a33;--mute:#6b678a;--line:#e0dbf5;--coin:#e8a400;--accent:#0f9d73;--danger:#d64550;--me:#e6e0ff;
+:root{--bg:#f4f4f9;--panel:#fff;--ink:#22213a;--mute:#7a7894;--line:#e6e4f2;--coin:#e8a400;--accent:#1faa6e;--accent-ink:#fff;--danger:#d64550;--me:#e9f7f1;--pill:#f3e3ac;--pill-ink:#7a5b00;--shadow:0 1px 3px rgba(30,27,75,.08);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
 :root:not([data-theme="light"]){}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--danger:#ff7b84;--me:#2a2f66;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--danger:#ff7b84;--me:#2a2f66;color-scheme:dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--accent-ink:#07241b;--danger:#ff7b84;--me:#2a2f66;--pill:#5a4a12;--pill-ink:#ffd95e;--shadow:0 1px 3px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12142a;--panel:#1b1e3a;--ink:#f1eeff;--mute:#9a97c4;--line:#2d3160;--coin:#ffc93c;--accent:#5be3b0;--accent-ink:#07241b;--danger:#ff7b84;--me:#2a2f66;--pill:#5a4a12;--pill-ink:#ffd95e;--shadow:0 1px 3px rgba(0,0,0,.4);color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 *{box-sizing:border-box}
-body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.45 ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif}
-button,input,textarea{font:inherit;color:inherit}
-button{cursor:pointer;border:0;border-radius:10px;padding:.5em .9em;background:var(--accent);color:#07241b;font-weight:600}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;transition:background .2s}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:.5em .9em;background:var(--accent);color:var(--accent-ink);font-weight:600;transition:filter .15s,transform .08s}
+button:hover:not(:disabled){filter:brightness(1.07)}
+button:active:not(:disabled){transform:scale(.98)}
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
 button.bad{background:var(--danger);color:#fff}
+button.sm{padding:.35em .7em;font-size:.9rem}
 button:disabled{opacity:.45;cursor:default}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.55em .75em;width:100%}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,textarea,select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.55em .75em;width:100%;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 #login{height:100%;display:grid;place-items:center;padding:1rem}
-#login form{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:1.6rem;width:min(380px,100%);display:grid;gap:.8rem}
+#login form{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:1.6rem;width:min(380px,100%);display:grid;gap:.8rem}
 #login h1{margin:0;font-size:1.9rem}
 #login p{margin:0;color:var(--mute)}
 #err{color:var(--danger);min-height:1.3em;font-size:.9rem}
 #app{height:100%;display:none;flex-direction:column}
 header{display:flex;align-items:center;gap:.8rem;padding:.6rem 1rem;border-bottom:1px solid var(--line);background:var(--panel)}
 header b{font-size:1.15rem;flex:1}
-.coins{color:var(--coin);font-weight:600;white-space:nowrap}
-nav{display:flex;gap:.4rem;padding:.5rem 1rem;border-bottom:1px solid var(--line);overflow-x:auto}
-nav button{background:transparent;color:var(--mute);border:1px solid transparent}
-nav button.on{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.coins{color:var(--coin);font-weight:700;white-space:nowrap}
+nav{display:flex;gap:.4rem;padding:.5rem 1rem;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto;position:sticky;top:0;z-index:2}
+nav button{background:transparent;color:var(--mute);border:1px solid transparent;white-space:nowrap}
+nav button:hover{color:var(--ink);background:var(--bg)}
+nav button.on{background:var(--bg);color:var(--ink);border-color:var(--line)}
 main{flex:1;min-height:0;display:flex;justify-content:center}
 .pane{display:none;min-height:0;flex:1;max-width:760px;width:100%}
 #log{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.45rem}
-.m{max-width:85%;padding:.45rem .75rem;border-radius:14px;background:var(--panel);border:1px solid var(--line);overflow-wrap:anywhere}
+.m{max-width:85%;padding:.45rem .75rem;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);overflow-wrap:anywhere;transition:box-shadow .15s}
 .m.me{align-self:flex-end;background:var(--me)}
 .m .n{font-weight:600;font-size:.85rem;color:var(--accent)}
 .m .x{background:none;color:var(--danger);padding:0 .3em;margin-left:.3em}
 .sys{align-self:center;color:var(--mute);font-size:.88rem;text-align:center}
-#send{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line)}
+#send{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line);background:var(--panel);position:relative}
+#cmds{position:absolute;left:1rem;right:4.5rem;bottom:calc(100% + 4px);background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);display:none;overflow:hidden;z-index:5}
+#cmds button{display:flex;gap:.6rem;width:100%;text-align:left;background:none;color:var(--ink);border-radius:0;padding:.5em .8em;font-weight:400}
+#cmds button.on,#cmds button:hover{background:var(--bg)}
+#cmds b{color:var(--accent);min-width:4.2em}
+#cmds span{color:var(--mute);font-size:.88rem}
 .scroll{overflow-y:auto;padding:1rem;gap:.7rem;align-content:start}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.8rem;display:flex;gap:.8rem;align-items:center}
-.card .e{font-size:2rem}.card .i{flex:1;min-width:0}.card small{color:var(--mute);display:block}
-.price{color:var(--coin);font-weight:600}
-h2{margin:.2rem 0;font-size:1.05rem}
+.scroll>*{margin-bottom:.7rem}.scroll>*:last-child{margin-bottom:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:.8rem;display:flex;gap:.8rem;align-items:center;transition:box-shadow .15s,transform .12s}
+.card:hover{box-shadow:0 3px 10px rgba(30,27,75,.12)}
+.card .e{font-size:2rem;line-height:1}.card .i{flex:1;min-width:0}.card small{color:var(--mute);display:block}
+.card .pic{width:52px;height:52px;border-radius:8px;object-fit:cover;flex:none;background:var(--line)}
+.price{color:var(--coin);font-weight:700;white-space:nowrap}
+.strike{color:var(--mute);text-decoration:line-through;font-weight:400;margin-right:.35em}
+h2{margin:.4rem 0 .1rem;font-size:1.05rem}
 .row{display:flex;gap:.5rem;flex-wrap:wrap}.row>*{flex:1;min-width:90px}
 .empty{color:var(--mute);padding:1rem;text-align:center}
-#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:.5em 1em;border-radius:10px;display:none;z-index:9}
-.tag{font-size:.75rem;background:var(--coin);color:#2b1d00;border-radius:6px;padding:0 .4em;margin-left:.3em}
+#toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:min(92vw,560px);background:var(--ink);color:var(--bg);padding:.5em 1em;border-radius:10px;display:none;z-index:9;text-align:center}
+.tag{font-size:.75rem;background:var(--coin);color:#2b1d00;border-radius:6px;padding:.05em .45em;margin-left:.3em;white-space:nowrap}
+.tag.sale{background:var(--danger);color:#fff;font-weight:700}
+.tag.type{background:var(--bg);color:var(--mute);border:1px solid var(--line)}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:20px;padding:.1em .6em;margin:.1em .15em 0 0;background:var(--pill);color:var(--pill-ink);white-space:nowrap}
+.pill.type{background:#e8e6f7;color:#5552a0}
+.pill.fire{background:#ffd9d4;color:#a3271b}.pill.water{background:#d4e8ff;color:#1c4fa0}.pill.poison{background:#e3c8f5;color:#6a1fa0}.pill.normal{background:#e8e6f7;color:#5552a0}
+.bar{height:8px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:.35rem}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .3s}
 body[data-tab=chat] #p-chat{display:flex;flex-direction:column}
-body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settings] #p-settings,body[data-tab=admin] #p-admin{display:grid}
+body[data-tab=shop] #p-shop,body[data-tab=battle] #p-battle,body[data-tab=trade] #p-trade,body[data-tab=wallet] #p-wallet,body[data-tab=settings] #p-settings,body[data-tab=admin] #p-admin{display:grid}
 .mw{display:flex;gap:.5rem;align-items:flex-end;max-width:92%}
 .mw.me{align-self:flex-end;flex-direction:row-reverse}
 .av{width:36px;height:36px;border-radius:50%;flex:none;background:var(--line);object-fit:cover;overflow:visible}
 .av.big{width:104px;height:104px}
 .noav .mw .av{display:none}
-.big-bal{font-size:2.5rem;font-weight:600;color:var(--coin);line-height:1.1}
-.set{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.9rem;display:grid;gap:.6rem}
+.big-bal{font-size:2.5rem;font-weight:700;color:var(--coin);line-height:1.1}
+.set{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:.9rem;display:grid;gap:.6rem}
 .sw,.seg{display:flex;gap:.45rem;flex-wrap:wrap}
 .sw button{width:32px;height:32px;padding:0;border-radius:50%;border:2px solid var(--line)}
 .sw button.on,.seg button.on{outline:2px solid var(--accent);outline-offset:2px}
 .seg button{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
 .set label.t{display:flex;gap:.6rem;align-items:center}
 .set input[type=checkbox]{width:auto}
+.eqrow{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.35rem}
+.eqrow button{font-size:.82rem;padding:.35em .6em}
+.eqrow button.wearing{background:var(--accent);color:var(--accent-ink)}
+.eqrow button.elsewhere{opacity:.55}
+.trow{display:grid;grid-template-columns:1fr auto;gap:.3rem .6rem;align-items:center;padding:.25rem 0;border-top:1px dashed var(--line)}
+.trow input{width:64px;padding:.3em .5em}
+.trow label{display:flex;gap:.5rem;align-items:center}
+.trow input[type=checkbox]{width:auto}
+.leadbadge{font-size:.72rem;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:20px;padding:.1em .6em;margin-left:.3em}
+.imgprev{max-width:96px;max-height:96px;border-radius:8px;border:1px solid var(--line)}
+@media(max-width:560px){.card{padding:.65rem;gap:.6rem}.scroll{padding:.7rem}header b{font-size:1rem}}
 </style>
 </head>
 <body data-tab="chat" data-side="shop">
 <div id="login"><form id="lf">
  <h1>CatChat 🐾</h1>
- <p>Pick a name to chat, earn coins and shop. Your name stays yours.</p>
+ <p>Pick a name to chat, earn coins, battle cats and shop. Your name stays yours.</p>
  <input id="nm" placeholder="Username" maxlength="16" autocomplete="username">
  <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
  <p style="font-size:.85rem">New name? Just pick a password and we’ll create the account.</p>
@@ -83,8 +115,10 @@ body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settin
  <nav id="nav"></nav>
  <main>
   <section class="pane" id="p-chat"><div id="log"></div>
-   <form id="send"><input id="msg" placeholder="Message, or /pay name 25" autocomplete="off" maxlength="300"><button>Send</button></form></section>
+   <form id="send"><input id="msg" placeholder="Message, or /pay, /buy, /give, /help" autocomplete="off" maxlength="300"><div id="cmds"></div><button>Send</button></form></section>
   <section class="pane scroll" id="p-shop"></section>
+  <section class="pane scroll" id="p-battle"></section>
+  <section class="pane scroll" id="p-trade"></section>
   <section class="pane scroll" id="p-wallet"></section>
   <section class="pane scroll" id="p-settings"></section>
   <section class="pane scroll" id="p-admin"></section>
@@ -94,10 +128,12 @@ body[data-tab=shop] #p-shop,body[data-tab=wallet] #p-wallet,body[data-tab=settin
 
 <script>
 let ROOT="meowmaster100",MAX_SELL=5;const $=s=>document.querySelector(s);
-// The server is the source of truth for the root admin name and listing cap.
 fetch("/api/config").then(r=>r.json()).then(c=>{if(c&&c.root)ROOT=String(c.root).toLowerCase();if(c&&c.maxSell)MAX_SELL=c.maxSell}).catch(()=>{});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let meId=null,players={},items={},msgs=[],tab="chat",started=false;
+let meId=null,players={},items={},cats=[],packs=[],wilds=[],trainers=[],msgs=[],tab="chat";
+let saleFor=0,saleDraft={price:"",hours:""},sellImg="",sellImgName="";
+let battleTo="",battleBet="",tradeTo="",tradeGive={},tradeWant={},tradeGiveCats={},tradeWantCats={};
+let packDrops=[],trainerTeams=[];
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const me=()=>players[meId], isAdmin=()=>!!(me()&&me().admin);
 const FUR=["#f2a65a","#8d8d9b","#2f2f3a","#f4efe6","#c98a5b","#e8c9a0","#7aa7c7","#d6a6e0"],EYE=["#4cc38a","#f5c542","#4aa3ff","#ff8a5c","#b07cff"],PAT=["plain","stripes","patch","muzzle"],ACC=["none","bow","crown","glasses","hat"];
@@ -115,12 +151,19 @@ function avHTML(p,big){
  const a=(p&&p.avatar)||defAv((p&&p.name)||"?"),cls="av"+(big?" big":"");
  return a.mode==="photo"&&typeof a.photo==="string"&&a.photo.startsWith("/avatar/")?`<img class="${cls}" alt="" src="${esc(a.photo)}">`:catSVG(a,cls);
 }
+const itemPic=(i,cls)=>i.img?`<img class="${cls||"pic"}" alt="" src="${esc(i.img)}">`:`<div class="${cls||"pic"} e" style="font-size:2rem">${esc(i.emoji||"🎁")}</div>`;
+const catPic=(c,cls)=>c.img?`<img class="${cls||"pic"}" alt="" src="${esc(c.img)}">`:`<div class="${cls||"pic"} e" style="font-size:2rem">${esc(c.emoji||"🐱")}</div>`;
 const showAv=()=>ls.get("meow-showav")!=="0";
 const applyAv=()=>document.body.classList.toggle("noav",!showAv());
 function applyTheme(){const t=ls.get("meow-theme")||"system";document.documentElement.dataset.theme=t==="system"?"":t}
 applyTheme();
-function toast(t){const e=$("#toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2600)}
+function toast(t){const e=$("#toast");e.innerHTML=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",3200)}
 function fail(t){$("#err").textContent=t}
+const effP=i=>(i.sale>0&&i.sale<i.price&&(!i.sends||i.sends>Date.now()))?i.sale:i.price;
+const saleOn=i=>effP(i)!==i.price;
+const priceHTML=i=>saleOn(i)?`<span class="strike">🪙 ${i.price}</span><span class="price">🪙 ${effP(i)}</span> <span class="tag sale">SALE</span>`:`<span class="price">🪙 ${i.price}</span>`;
+const pill=t=>t?`<span class="pill ${esc(String(t).toLowerCase())}">${esc(t)}</span>`:"";
+const typingIn=box=>box.contains(document.activeElement)&&/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
 
 let token=ls.get("meow-token")||"",es=null;
 function showLogin(msg){$("#app").style.display="none";$("#login").style.display="grid";fail(msg||"")}
@@ -129,7 +172,7 @@ async function api(a,body){
  const r=await fetch("/api/"+a,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify(body||{})});
  const j=await r.json().catch(()=>({}));
  if(r.status===401){logoutLocal();showLogin("Please log in again.");throw new Error("auth")}
- if(!r.ok){toast(j.error||"That didn’t work");throw new Error(j.error||"failed")}
+ if(!r.ok){toast(esc(j.error||"That didn’t work"));throw new Error(j.error||"failed")}
  return j;
 }
 function enter(t,id){token=t;ls.set("meow-token",t);meId=id;fail("");$("#login").style.display="none";$("#app").style.display="flex";start()}
@@ -158,6 +201,7 @@ function start(){
   players={};d.players.forEach(p=>players[p.id]=p);
   if(players[meId])Object.assign(players[meId],d.me);
   items={};d.items.forEach(i=>items[i.id]=i);
+  cats=d.cats||[];packs=d.packs||[];wilds=d.wilds||[];trainers=d.trainers||[];
   msgs=d.messages;renderAll();
  });
  es.onerror=()=>{if(es&&es.readyState===2){logoutLocal();showLogin("Session expired. Log in again.")}};
@@ -165,7 +209,7 @@ function start(){
 }
 function setTab(t){
  tab=t;document.body.dataset.tab=t;
- const tabs=[["chat","Chat"],["shop","Shop"],["wallet","Wallet"],["settings","Settings"]];if(isAdmin())tabs.push(["admin","Admin"]);
+ const tabs=[["chat","Chat"],["shop","Shop"],["battle","Battle"],["trade","Trade"],["wallet","Wallet"],["settings","Settings"]];if(isAdmin())tabs.push(["admin","Admin"]);
  $("#nav").innerHTML=tabs.map(([k,l])=>`<button class="${t===k?"on":""}" data-t="${k}">${l}</button>`).join("");
 }
 $("#nav").onclick=e=>{const t=e.target.dataset.t;if(t)setTab(t)};
@@ -176,68 +220,276 @@ function renderAll(){
  if(!me())return;
  $("#bal").textContent="🪙 "+(meId===ROOT?"∞":me().coins);
  if(!isAdmin()&&tab==="admin")tab="shop";
- setTab(tab);renderChat();renderShop();renderWallet();renderSettings();renderAdmin();
+ setTab(tab);renderChat();renderShop();renderBattle();renderTrade();renderWallet();renderSettings();renderAdmin();
 }
 function renderChat(){
  const l=$("#log"),stick=l.scrollHeight-l.scrollTop-l.clientHeight<80;
  l.innerHTML=msgs.map(m=>{
   if(m.sys)return `<div class="sys">${esc(m.text)}</div>`;
   const mine=m.name&&m.name.toLowerCase()===meId, p=players[(m.name||"").toLowerCase()];
-  return `<div class="mw ${mine?"me":""}">${avHTML(p||{name:m.name||"?"})}<div class="m ${mine?"me":""}"><div class="n">${esc(m.name)}${p&&p.admin?'<span class="tag">admin</span>':""}${isAdmin()?`<button class="x" data-del="${m.id}" title="Delete message">✕</button>`:""}</div>${esc(m.text)}</div></div>`}).join("")||'<div class="empty">No messages yet. Say hi.</div>';
+  return `<div class="mw ${mine?"me":""}">${avHTML(p||{name:m.name||"?"})}<div class="m ${mine?"me":""}"><div class="n">${esc(m.name)}${p&&p.admin?'<span class="tag">admin</span>':""}${isAdmin()?`<button class="x" data-del="${m.id}" title="Delete message">✕</button>`:""}</div>${esc(m.text)}</div></div>`}).join("")||'<div class="empty">No messages yet. Say hi — try <b>/help</b>.</div>';
  if(stick)l.scrollTop=l.scrollHeight;
 }
 $("#log").onclick=async e=>{const id=e.target.dataset.del;if(id&&isAdmin())try{await api("admin/delmsg",{id})}catch(x){}};
+
+const CMDS=[["/pay","name amount — send coins"],["/buy","item [qty] — buy from the shop"],["/give","player item [qty] — give an item"],["/help","show this help"]];
+function renderCmds(q){
+ const box=$("#cmds");
+ if(q==null){box.style.display="none";return}
+ const list=CMDS.filter(([c])=>c.startsWith("/"+q.toLowerCase()));
+ if(!list.length){box.style.display="none";return}
+ box.innerHTML=list.map(([c,d])=>`<button type="button" data-c="${c}"><b>${c}</b><span>${esc(d)}</span></button>`).join("");
+ box.style.display="block";
+}
+$("#msg").addEventListener("input",e=>{
+ const v=e.target.value;
+ renderCmds(v[0]==="/"?v.slice(1).split(" ")[0]:null);
+});
+$("#cmds").onclick=e=>{
+ const b=e.target.closest("button");if(!b)return;
+ $("#msg").value=b.dataset.c+" ";$("#msg").focus();$("#cmds").style.display="none";
+};
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape")$("#cmds").style.display="none";
+});
+function findItemsByName(name,pool){
+ const t=String(name||"").trim().toLowerCase();if(!t)return[];
+ const ex=pool.filter(i=>i.name.toLowerCase()===t);
+ if(ex.length)return ex;
+ const pre=pool.filter(i=>i.name.toLowerCase().startsWith(t));
+ return pre.length?pre:pool.filter(i=>i.name.toLowerCase().includes(t));
+}
 $("#send").onsubmit=async e=>{
- e.preventDefault();const t=$("#msg").value.trim();if(!t||!me())return;$("#msg").value="";
+ e.preventDefault();const inp=$("#msg"),t=inp.value.trim();if(!t||!me())return;inp.value="";$("#cmds").style.display="none";
  try{
   const c=t.match(/^\/pay\s+(\S+)\s+(\d+)$/i);
-  if(c)return pay(c[1],+c[2]);
-  if(t[0]==="/")return toast("Try /pay name 25");
+  if(c)return void await api("pay",{to:c[1],amt:+c[2]});
+  const b=t.match(/^\/buy\s+(.+?)(?:\s+(\d+))?$/i);
+  if(b){
+   const pool=Object.values(items).filter(i=>!(i.seller&&i.seller===meId)&&i.stock!==0);
+   const hit=findItemsByName(b[1],pool);
+   if(!hit.length)return toast("No shop item matches “"+esc(b[1])+"”.");
+   if(hit.length>1)return toast("Which one? "+hit.slice(0,3).map(i=>"“"+esc(i.name)+"”").join(", "));
+   const qty=Math.max(1,Math.min(99,parseInt(b[2])||1)),item=hit[0],price=effP(item);
+   const n=item.stock>0?Math.min(qty,item.stock):qty;
+   if(!n)return toast("That’s sold out.");
+   if(meId!==ROOT&&me().coins<price*n)return toast("Not enough coins.");
+   for(let k=0;k<n;k++)await api("buy",{id:item.id});
+   return void toast(`Bought ${n>1?n+"× ":""}${esc(item.name)} for 🪙 ${price*n}`);
+  }
+  const g=t.match(/^\/give\s+(\S+)\s+(.+?)(?:\s+(\d+))?$/i);
+  if(g){
+   const who=Object.values(players).find(p=>p.id===g[1].toLowerCase()&&!p.banned);
+   if(!who)return toast("No player named “"+esc(g[1])+"”.");
+   if(who.id===meId)return toast("You can’t give items to yourself.");
+   const mine=Object.entries(me().inv||{}).map(([id,n])=>items[id]&&{id:+id,n,name:items[id].name}).filter(Boolean);
+   const hit=findItemsByName(g[2],mine);
+   if(!hit.length)return toast("You don’t own anything matching “"+esc(g[2])+"”.");
+   if(hit.length>1)return toast("Which one? "+hit.slice(0,3).map(i=>"“"+esc(i.name)+"”").join(", "));
+   const qty=Math.max(1,Math.min(99,parseInt(g[3])||1));
+   if((me().inv[hit[0].id]||0)<qty)return toast(`You only have ${me().inv[hit[0].id]||0}.`);
+   await api("give",{to:who.id,id:hit[0].id,n:qty});
+   return;
+  }
+  if(/^\/help$/i.test(t))return void toast("<b>/pay</b> name amount · <b>/buy</b> item [qty] · <b>/give</b> player item [qty]<br>Names match exactly, then by prefix. Sale prices apply automatically.");
+  if(t[0]==="/")return void toast("Try <b>/help</b> for slash commands.");
   await api("send",{text:t});
  }catch(x){}
 };
 async function pay(to,amt){await api("pay",{to,amt})}
 
+/* ---------- shop ---------- */
+function fileToPic(file,size){return new Promise((ok,no)=>{
+ if(!file||!file.type.startsWith("image/"))return no(new Error("image file"));
+ const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{
+  const c=document.createElement("canvas");c.width=c.height=size;const s=Math.min(img.width,img.height);
+  c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,size,size);
+  ok({url:c.toDataURL("image/jpeg",.8),name:file.name})};img.onerror=()=>no(new Error("image"));img.src=rd.result};
+ rd.onerror=()=>no(new Error("image"));rd.readAsDataURL(file)})}
 function renderShop(){
- const box=$("#p-shop"),m=me();
- if(!$("#sf"))box.innerHTML=`<h2>Sell an item</h2><form id="sf" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div><input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" max="1000000" placeholder="Price" required><button>List for sale</button></div><small id="slots"></small></form><h2>Shop</h2><div id="shoplist" style="display:grid;gap:.7rem"></div>`;
+ const box=$("#p-shop"),m=me();if(!m)return;
+ if(typingIn(box))return;
+ box.innerHTML=`<h2>Sell an item</h2><form id="sf" class="set">
+  <div class="row"><input name="emoji" placeholder="Emoji (if no picture)" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div>
+  <div class="row"><label class="t" style="flex:2">Picture <input type="file" id="sellfile" accept="image/*"></label><button type="button" class="ghost" id="selldraw">Draw one</button></div>
+  <div id="sellprev">${sellImg?`<img class="imgprev" alt="" src="${sellImg}">`:""}</div>
+  <input name="desc" placeholder="Description" maxlength="80">
+  <div class="row"><input name="price" type="number" min="1" max="1000000" placeholder="Price each" required><input name="qty" type="number" min="1" max="99" placeholder="How many (default 1)"></div>
+  <div class="row"><select name="kind"><option value="normal">Normal (buyers can sell it back)</option><option value="physical">Physical (a real one!)</option><option value="fun">Fun (can be tossed, not resold)</option></select><button>List for sale</button></div>
+  <small id="slots"></small></form>
+  <h2>Shop</h2><div id="shoplist" style="display:grid;gap:.7rem"></div>
+  <h2>Packs</h2><div id="packlist" style="display:grid;gap:.7rem"></div>
+  <h2>Cats</h2><div id="catlist" style="display:grid;gap:.7rem"></div>`;
  const mine=Object.values(items).filter(i=>i.seller===meId&&i.stock!==0).length,full=!isAdmin()&&mine>=MAX_SELL;
  $("#slots").textContent=isAdmin()?`${mine} listed · admins can sell unlimited items`:`${mine}/${MAX_SELL} items listed`;
- $("#sf button").disabled=full;
- const list=Object.entries(items).filter(([,i])=>!(i.seller&&i.stock===0));
- $("#shoplist").innerHTML=list.length?list.map(([id,i])=>{
-  const out=i.stock===0,own=i.seller===meId,poor=m&&meId!==ROOT&&m.coins<i.price,sp=i.seller&&players[i.seller];
-  return `<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>${esc(i.desc||"")}${i.stock>0&&!i.seller?` · ${i.stock} left`:""}</small>${i.seller?`<small>Sold by ${esc(sp?sp.name:"a cat")}</small>`:""}<span class="price">🪙 ${i.price}</span></div>${own?`<button class="ghost" data-cancel="${id}">Cancel</button>`:`<button data-buy="${id}" ${out||poor?"disabled":""}>${out?"Sold out":"Buy"}</button>`}</div>`}).join(""):`<div class="empty">Nothing for sale yet. List the first item above!</div>`;
+ const submitBtn=$("#sf button:not(.ghost)");if(submitBtn)submitBtn.disabled=full;
+ const list=Object.entries(items).filter(([,i])=>!(i.seller&&i.stock===0)&&i.kind!=="ability");
+ $("#shoplist").innerHTML=list.length?list.map(([,i])=>{
+  const out=i.stock===0,own=i.seller===meId,price=effP(i),sale=saleOn(i),poor=m&&meId!==ROOT&&m.coins<price,sp=i.seller&&players[i.seller];
+  const canSale=isAdmin()||own;
+  return `<div class="card">${itemPic(i)}<div class="i"><b>${esc(i.name)}</b> ${i.kind==="physical"?pill("physical"):i.kind==="fun"?pill("fun"):""}<small>${esc(i.desc||"")}${i.stock>0&&!i.seller?` · ${i.stock} left`:""}${i.stock>1&&i.seller?` · ${i.stock} left`:""}</small>${i.seller?`<small>Sold by ${esc(sp?sp.name:"a cat")}</small>`:""}<div>${priceHTML(i)}</div>
+  ${saleFor===i.id?`<div class="row" style="margin-top:.4rem"><input type="number" min="1" placeholder="Sale price" data-sp value="${esc(saleDraft.price)}"><input type="number" min="0" max="720" placeholder="Hours (0 = no end)" data-sh value="${esc(saleDraft.hours)}"></div><div class="row" style="margin-top:.4rem"><button class="sm" data-savesale="${i.id}">Set sale</button><button class="sm ghost" data-endsale="${i.id}">End sale</button></div>`:""}</div>${own?`<button class="ghost sm" data-cancel="${i.id}">Cancel</button>${canSale?`<button class="ghost sm" data-sale="${i.id}">Sale</button>`:""}`:`<button class="sm" data-buy="${i.id}" ${out||poor?"disabled":""}>${out?"Sold out":"Buy"}</button>${canSale&&isAdmin?`<button class="ghost sm" data-sale="${i.id}">Sale</button>`:""}`}</div>`}).join(""):`<div class="empty">Nothing for sale yet. List the first item above!</div>`;
+ $("#packlist").innerHTML=packs.length?packs.map(k=>{
+  const poor=m&&meId!==ROOT&&m.coins<k.price,out=k.stock===0;
+  const drops=(k.data||[]).map(d=>{const r=d.t==="cat"?cats.find(c=>c.id===d.id):items[d.id];return r?esc(r.name)+(d.n>1?` ×${d.n}`:""):null}).filter(Boolean).join(", ");
+  return `<div class="card">${k.img?`<img class="pic" alt="" src="${esc(k.img)}">`:`<div class="pic e" style="font-size:2rem">${esc(k.emoji||"🎁")}</div>`}<div class="i"><b>${esc(k.name)}</b><small>${esc(k.descr||"")}</small>${drops?`<small>Inside: ${drops}</small>`:""}<span class="price">🪙 ${k.price}</span></div><button class="sm" data-packbuy="${k.id}" ${out||poor?"disabled":""}>${out?"Sold out":k.price===0?"Open":"Buy"}</button></div>`}).join(""):`<div class="empty">No packs yet.</div>`;
+ const ownedCatIds=new Set((m.cats||[]).map(o=>o.cat));
+ $("#catlist").innerHTML=cats.filter(c=>c.shop).length?cats.filter(c=>c.shop).map(c=>{
+  const owned=ownedCatIds.has(c.id),poor=m&&meId!==ROOT&&m.coins<c.price,out=c.stock===0;
+  return `<div class="card">${catPic(c)}<div class="i"><b>${esc(c.name)}</b> ${pill(c.type1)}${c.type2?pill(c.type2):""}${c.rarity?`<span class="pill">${esc(c.rarity)}</span>`:""}<small>${c.hp} HP${c.evolv?` · Evolves at level ${c.evolv}`:""}${c.stock>0?` · ${c.stock} left`:""}</small><span class="price">🪙 ${c.price}</span></div>${owned?`<button class="sm ghost" disabled>Owned</button>`:`<button class="sm" data-catbuy="${c.id}" ${out||poor?"disabled":""}>${out?"Sold out":c.price===0?"Adopt":"Buy"}</button>`}</div>`}).join(""):`<div class="empty">No cats for sale yet.</div>`;
 }
 $("#p-shop").onclick=async e=>{
  const d=e.target.dataset;
  try{
-  if(d.buy){await api("buy",{id:d.buy});toast("Bought "+(items[d.buy]?items[d.buy].name:"item"))}
+  if(d.buy){await api("buy",{id:d.buy});toast("Bought "+esc(items[d.buy]?items[d.buy].name:"item"))}
   else if(d.cancel){await api("item/cancel",{id:d.cancel});toast("Listing cancelled")}
+  else if(d.packbuy){await api("pack/buy",{id:d.packbuy});toast("Pack opened — check the chat!")}
+  else if(d.catbuy){await api("cat/buy",{id:d.catbuy});toast("A new cat joined you!")}
+  else if(d.sale){saleFor=saleFor===+d.sale?0:+d.sale;saleDraft={price:"",hours:""};renderShop()}
+  else if(d.savesale){const card=e.target.closest(".card");const pv=card.querySelector("[data-sp]").value,hv=card.querySelector("[data-sh]").value;await api("item/sale",{id:d.savesale,price:pv,ends:hv});saleFor=0;saleDraft={price:"",hours:""};toast("Sale updated")}
+  else if(d.endsale){await api("item/sale",{id:d.endsale});saleFor=0;toast("Sale ended")}
  }catch(x){}
 };
+$("#p-shop").oninput=e=>{
+ if(e.target.id==="sellfile"||!e.target.dataset)return;
+ if("sp" in e.target.dataset)saleDraft.price=e.target.value;
+ if("sh" in e.target.dataset)saleDraft.hours=e.target.value;
+};
+$("#p-shop").onchange=e=>{
+ if(e.target.id==="sellfile"){
+  const f=e.target.files[0];if(!f)return;
+  fileToPic(f,128).then(({url,name})=>{sellImg=url;sellImgName=name;$("#sellprev").innerHTML=`<img class="imgprev" alt="" src="${url}">`}).catch(()=>toast("Couldn’t read that image"));
+ }
+};
+$("#p-shop").addEventListener("click",e=>{
+ if(e.target.id==="selldraw"){const EM=["🐱","🐶","🐸","🐵","🦊","🐼","🐯","🦁","🐷","🐰"];const pick=EM[Math.floor(Math.random()*EM.length)];const f=$("#sf input[name=emoji]");if(f)f.value=pick;sellImg="";}
+});
 $("#p-shop").onsubmit=async e=>{
- e.preventDefault();const f=new FormData(e.target);
- try{await api("item/sell",{name:f.get("name"),emoji:f.get("emoji"),desc:f.get("desc"),price:f.get("price")});e.target.reset();toast("Listed for sale")}catch(x){}
+ e.preventDefault();if(e.target.id!=="sf")return;const f=new FormData(e.target);
+ try{await api("item/sell",{name:f.get("name"),emoji:f.get("emoji"),img:sellImg,desc:f.get("desc"),price:f.get("price"),qty:f.get("qty"),kind:f.get("kind")});e.target.reset();sellImg="";$("#sellprev").innerHTML="";toast("Listed for sale")}catch(x){}
 };
 
+/* ---------- battle ---------- */
+function renderBattle(){
+ const box=$("#p-battle"),m=me();if(!m)return;
+ if(typingIn(box))return;
+ const mine=m.cats||[];
+ const leadOpt=o=>`${esc(o.name)} · Lv ${o.lvl} · ${o.hp} base HP`;
+ box.innerHTML=`<h2>Your lead cat</h2><div class="set">${mine.length?`<select id="leadsel">${mine.map(o=>`<option value="${o.own}" ${m.lead===o.own?"selected":""}>${leadOpt(o)}</option>`).join("")}</select>`:`<div class="empty">You don’t own any cats yet — adopt one from the Shop.</div>`}</div>
+ <h2>Challenge a player</h2><div class="set"><select id="battlewho">${Object.values(players).filter(p=>p.id!==meId&&!p.banned).map(p=>`<option value="${p.id}" ${battleTo===p.id?"selected":""}>${esc(p.name)}</option>`).join("")||"<option value=''>No opponents</option>"}</select><div class="row"><input id="battlebet" type="number" min="1" max="1000000" placeholder="Bet (coins)" value="${esc(battleBet)}"><button id="challengebtn">Challenge</button></div><small style="color:var(--mute)">Both leads fight automatically. Winner takes the bet, both cats earn XP.</small></div>
+ <h2>Wild cats</h2><div style="display:grid;gap:.7rem">${wilds.length?wilds.map(w=>{const c=cats.find(x=>x.id===w.cat);return `<div class="card">${c?catPic(c):""}<div class="i"><b>${esc(c?c.name:"?")}</b><small>Lv ${w.lvl} · ${c?c.hp:0} HP</small><small>Winner catches it (+${w.lvl*10} coins)</small></div><button class="sm" data-wild="${w.id}">Fight</button></div>`}).join(""):'<div class="empty">No wild cats yet.</div>'}</div>
+ <h2>Trainers</h2><div style="display:grid;gap:.7rem">${trainers.length?trainers.map(t=>`<div class="card">${t.img?`<img class="pic" alt="" src="${esc(t.img)}">`:`<div class="pic e" style="font-size:2rem">🧑‍🎤</div>`}<div class="i"><b>${esc(t.name)}</b><small>${(t.team||[]).length} cat${(t.team||[]).length===1?"":"s"}</small><small>Reward 🪙 ${t.reward} (first win)</small></div><button class="sm" data-trainer="${t.id}">Fight</button></div>`).join(""):'<div class="empty">No trainers yet.</div>'}</div>
+ <h2>Abilities for sale</h2><div style="display:grid;gap:.7rem">${Object.values(items).filter(i=>i.kind==="ability").map(i=>{const owned=(m.inv[i.id]||0)>0,poor=m&&meId!==ROOT&&m.coins<i.price,out=i.stock===0;return `<div class="card"><div class="pic e" style="font-size:2rem">${esc(i.emoji||"✨")}</div><div class="i"><b>${esc(i.name)}</b> ${pill(i.atype)}<small>${i.dmg} damage · ${esc(i.desc||"")}</small><span class="price">🪙 ${i.price}</span></div>${owned?'<small style="color:var(--mute)">Owned — equip in Wallet</small>':`<button class="sm" data-buyab="${i.id}" ${out||poor?"disabled":""}>${out?"Sold out":i.price===0?"Get":"Buy"}</button>`}</div>`}).join("")||'<div class="empty">No abilities yet.</div>'}<small style="color:var(--mute)">Everyone starts with a free Scratch (10 damage). An attack fits on one cat at a time — equip them under Wallet → Your cats.</small></div>`;
+}
+$("#p-battle").onchange=e=>{
+ if(e.target.id==="leadsel")api("cat/lead",{own:e.target.value}).then(()=>toast("Lead cat set")).catch(()=>{});
+ if(e.target.id==="battlewho"){battleTo=e.target.value}
+};
+$("#p-battle").oninput=e=>{if(e.target.id==="battlebet")battleBet=e.target.value};
+$("#p-battle").onclick=async e=>{
+ const d=e.target.dataset;
+ try{
+  if(e.target.id==="challengebtn"||d.challenge){
+   const who=$("#battlewho").value,bet=parseInt($("#battlebet").value);
+   if(!who)return toast("Pick an opponent.");
+   await api("battle/player",{to:who,bet});battleBet="";
+  }
+  else if(d.wild){await api("battle/wild",{id:d.wild});toast("Battle done — check the chat!")}
+  else if(d.trainer){await api("battle/trainer",{id:d.trainer});toast("Battle done — check the chat!")}
+  else if(d.buyab){await api("buy",{id:d.buyab});toast("Ability learned")}
+ }catch(x){}
+};
+
+/* ---------- trade ---------- */
+function tradeRows(inv,cowns,qtyMap,catMap,prefix){
+ return Object.entries(inv||{}).filter(([id])=>items[id]).map(([id,n])=>{
+  const i=items[id];
+  return `<div class="trow"><span>${itemPic(i)} <b>${esc(i.name)}</b> <small style="color:var(--mute)">(has ${n})</small></span><input type="number" min="0" max="${n}" placeholder="0" value="${qtyMap[id]||""}" data-titem="${prefix}:${id}"></div>`}).join("")
+ +(cowns||[]).map(o=>{const c=cats.find(x=>x.id===o.cat);if(!c)return"";
+  return `<div class="trow"><label><input type="checkbox" data-tcat="${prefix}:${o.own}" ${catMap[o.own]?"checked":""}> ${catPic(c)} <b>${esc(c.name)}</b> <small style="color:var(--mute)">(cat)</small></label><span></span></div>`}).join("");
+}
+function renderTrade(){
+ const box=$("#p-trade"),m=me();if(!m)return;
+ if(typingIn(box))return;
+ if(!tradeTo||!players[tradeTo]||tradeTo===meId)tradeTo=(Object.values(players).find(p=>p.id!==meId&&!p.banned)||{}).id||"";
+ const other=players[tradeTo];
+ const open=m.trades||[];
+ box.innerHTML=`${open.length?`<h2>Open offers</h2>`+open.map(t=>{
+  const otherName=t.frm===meId?(players[t.too]||{}).name||t.too:(players[t.frm]||{}).name||t.frm;
+  const catName=(own,pid)=>{const pl=players[pid]||{};const list=pid===meId?(m.cats||[]):(pl.cowns||[]).map(o=>({own:o.own,cat:o.cat}));
+   const o=list.find(o=>o.own===own);const c=o&&cats.find(x=>x.id===o.cat);return c?esc(c.name):"cat#"+own};
+  const sum=(s,pid)=>{const its=Object.entries(s.items||{}).map(([id,n])=>`${n}× ${esc(items[id]?items[id].name:"#"+id)}`).join(", ");
+   const cs=(s.cats||[]).map(own=>catName(own,pid)).join(", ");return[its,cs].filter(Boolean).join("; ")||"nothing"};
+  const mineSide=t.frm===meId?t.give:t.want,otherSide=t.frm===meId?t.want:t.give;
+  const otherPid=t.frm===meId?t.too:t.frm;
+  return `<div class="card"><div class="i"><b>${t.frm===meId?"You → "+esc(otherName):esc(otherName)+" → you"}</b><small>You give: ${sum(mineSide,meId)||"—"}</small><small>You get: ${sum(otherSide,otherPid)||"—"}</small></div>${t.frm===meId?`<button class="ghost sm" data-tcancel="${t.id}">Cancel</button>`:`<button class="sm" data-take="${t.id}">Accept</button> <button class="ghost sm" data-tno="${t.id}">Decline</button>`}</div>`}).join(""):""}
+ <h2>Trade with someone</h2><div class="set"><select id="tradewho">${Object.values(players).filter(p=>p.id!==meId&&!p.banned).map(p=>`<option value="${p.id}" ${tradeTo===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
+ <h2 style="margin:0">You give</h2><div>${tradeRows(m.inv,m.cats,tradeGive,tradeGiveCats,"g")||'<div class="empty">Nothing to give yet.</div>'}</div>
+ <h2 style="margin:0">You want from ${esc(other?other.name:"—")}</h2><div>${other?tradeRows(other.inv,other.cowns,tradeWant,tradeWantCats,"w"):'<div class="empty">Pick a player above.</div>'}</div>
+ <button id="sendoffer">Send offer</button></div>`;
+}
+$("#p-trade").onchange=e=>{
+ if(e.target.id==="tradewho"){tradeTo=e.target.value;tradeWant={};tradeWantCats={};renderTrade()}
+ if(e.target.dataset.tcat){const[,id]=e.target.dataset.tcat.split(":");const map=e.target.dataset.tcat[0]==="g"?tradeGiveCats:tradeWantCats;if(e.target.checked)map[id]=1;else delete map[id]}
+};
+$("#p-trade").oninput=e=>{
+ const k=e.target.dataset.titem;if(!k)return;
+ const[side,id]=k.split(":"),map=side==="g"?tradeGive:tradeWant,v=parseInt(e.target.value)||0;
+ if(v>0)map[id]=v;else delete map[id];
+};
+$("#p-trade").onclick=async e=>{
+ const d=e.target.dataset;
+ try{
+  if(e.target.id==="sendoffer"){
+   const give={items:tradeGive,cats:Object.keys(tradeGiveCats).map(Number)},want={items:tradeWant,cats:Object.keys(tradeWantCats).map(Number)};
+   await api("trade/send",{to:tradeTo,give,want});
+   tradeGive={};tradeWant={};tradeGiveCats={};tradeWantCats={};toast("Offer sent");
+  }
+  else if(d.take){await api("trade/answer",{id:d.take,ok:true});toast("Trade accepted")}
+  else if(d.tno){await api("trade/answer",{id:d.tno});toast("Offer declined")}
+  else if(d.tcancel){await api("trade/cancel",{id:d.tcancel});toast("Offer cancelled")}
+ }catch(x){}
+};
+
+/* ---------- wallet ---------- */
 function renderWallet(){
  const m=me(),box=$("#p-wallet");if(!m)return;
- if(box.contains(document.activeElement)&&document.activeElement.tagName==="INPUT")return;
+ if(typingIn(box))return;
  const R=meId===ROOT,left=864e5-(Date.now()-(m.daily||0));
  const inv=Object.entries(m.inv||{}).filter(([id])=>items[id]);
- const isR=p=>p.id===ROOT;
- const top=Object.values(players).filter(p=>!p.banned).sort((a,b)=>isR(b)-isR(a)||b.coins-a.coins).slice(0,8);
- const names=Object.values(players).filter(p=>p.name.toLowerCase()!==meId&&!p.banned);
+ const top=Object.values(players).filter(p=>!p.banned).sort((a,b)=>(b.id===ROOT)-(a.id===ROOT)||b.coins-a.coins).slice(0,8);
+ const names=Object.values(players).filter(p=>p.id!==meId&&!p.banned);
+ const abilities=Object.values(items).filter(i=>i.kind==="ability"&&(m.inv[i.id]||0)>0);
  box.innerHTML=`<div class="set" style="text-align:center"><small style="color:var(--mute)">Your balance</small><div class="big-bal">🪙 ${R?"∞":m.coins}</div><button data-daily ${left>0?"disabled":""}>${left>0?`Daily bonus in ${Math.ceil(left/36e5)}h`:"Claim 50 daily coins"}</button></div>
  <h2>Send coins</h2><form id="payf" class="set"><div class="row"><input name="to" list="plist" placeholder="Player name" required maxlength="16" autocomplete="off"><input name="amt" type="number" min="1" placeholder="Amount" required></div><datalist id="plist">${names.map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist><button>Send</button></form>
- <h2>Your items</h2>${inv.length?inv.map(([id,n])=>`<div class="card"><div class="e">${esc(items[id].emoji||"🎁")}</div><div class="i"><b>${esc(items[id].name)}</b></div><b>×${n}</b></div>`).join(""):'<div class="empty">Nothing yet. Visit the shop.</div>'}
- <h2>Richest cats</h2>${top.map((p,i)=>`<div class="card">${avHTML(p)}<div class="i"><b>${i+1}. ${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}</div><span class="price">🪙 ${isR(p)?"∞":p.coins}</span></div>`).join("")}`;
+ <h2>Your items</h2>${inv.length?inv.map(([id,n])=>{const i=items[id];const sellable=(i.kind||"normal")==="normal"&&!i.seller;
+  return `<div class="card">${itemPic(i)}<div class="i"><b>${esc(i.name)}</b>${i.kind==="physical"?pill("physical"):i.kind==="fun"?pill("fun"):i.kind==="ability"?pill(i.atype||"ability"):""}<small>${esc(i.desc||"")}</small></div><b>×${n}</b>${i.kind==="ability"?`<button class="ghost sm" data-goto="battle">Equip</button>`:i.kind==="fun"?`<button class="ghost sm" data-toss="${id}">Toss</button>`:sellable?`<button class="ghost sm" data-sellback="${id}">Sell +${Math.floor(i.price*0.7)}</button>`:""}</div>`}).join(""):'<div class="empty">Nothing yet. Visit the shop.</div>'}
+ <h2>Your cats</h2>${(m.cats||[]).length?(m.cats||[]).map(o=>{
+  const eqId=(m.equip||{})[o.own],eqItem=eqId&&items[eqId];
+  return `<div class="card" style="align-items:flex-start">${catPic(o)}<div class="i"><b>${esc(o.name)}</b>${m.lead===o.own?'<span class="leadbadge">LEAD</span>':""} ${pill(o.type1)}${o.type2?pill(o.type2):""}${o.rarity?`<span class="pill">${esc(o.rarity)}</span>`:""}<small>${o.hp} HP · ${o.xp}/40 XP · Lv ${o.lvl}</small>${o.evolv?`<small>Evolves at level ${o.evolv}</small>`:""}<div class="bar"><i style="width:${Math.min(100,o.xp/40*100)}%"></i></div>
+  <div class="eqrow">${abilities.map(a=>`<button class="${eqId===a.id?"wearing":""}" data-eq="${o.own}:${a.id}" title="${a.dmg} damage">${eqId===a.id?"✓ ":""}${esc(a.name)} · ${a.dmg}</button>`).join("")||'<small style="color:var(--mute)">No abilities yet.</small>'}${eqId?`<button class="ghost" data-uneq="${o.own}">Unequip</button>`:""}</div>
+  ${m.lead!==o.own?`<div style="margin-top:.4rem"><button class="ghost sm" data-lead="${o.own}">Make lead</button></div>`:""}</div></div>`}).join(""):'<div class="empty">No cats yet. Adopt one from the Shop.</div>'}
+ <h2>Your abilities</h2>${abilities.length?abilities.map(a=>`<div class="card"><div class="pic e" style="font-size:2rem">${esc(a.emoji||"✨")}</div><div class="i"><b>${esc(a.name)}</b> ${pill(a.atype)}<small>${a.dmg} damage · ${esc(a.desc||"")}</small></div><b>×${m.inv[a.id]}</b></div>`).join(""):'<div class="empty">Scratch is free in the Battle tab.</div>'}
+ <h2>Richest cats</h2>${top.map((p,i)=>`<div class="card">${avHTML(p)}<div class="i"><b>${i+1}. ${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}</div><span class="price">🪙 ${p.id===ROOT?"∞":p.coins}</span></div>`).join("")}`;
 }
 $("#p-wallet").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{await pay(String(f.get("to")).trim(),parseInt(f.get("amt")));e.target.reset()}catch(x){}};
+$("#p-wallet").onclick=async e=>{
+ if("daily" in e.target.dataset){try{await api("daily");toast("+50 coins")}catch(x){}return}
+ const d=e.target.dataset;
+ try{
+  if(d.toss){await api("discard",{id:d.toss});toast("Tossed")}
+  else if(d.sellback){await api("sell",{id:d.sellback});toast("Sold")}
+  else if(d.goto){setTab("battle")}
+  else if(d.lead){await api("cat/lead",{own:d.lead});toast("Lead cat set")}
+  else if(d.eq){const[own,item]=d.eq.split(":");await api("equip",{own,item});toast("Equipped")}
+  else if(d.uneq){await api("equip",{own:d.uneq,item:0});toast("Unequipped")}
+ }catch(x){}
+};
 
+/* ---------- settings ---------- */
 function renderSettings(){
  const m=me();if(!m)return;
+ const box=$("#p-settings");if(box.contains(document.activeElement)&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;
  const a=m.avatar||defAv(m.name);
  const sw=(arr,k,cur)=>arr.map((c,i)=>`<button type="button" style="background:${c}" class="${cur===i?"on":""}" data-${k}="${i}" aria-label="${k} option ${i+1}"></button>`).join("");
  const opt=(arr,k,cur)=>arr.map((n,i)=>`<button type="button" class="${cur===i?"on":""}" data-${k}="${i}">${n}</button>`).join("");
@@ -245,7 +497,8 @@ function renderSettings(){
  <h2>Profile picture</h2><div class="set"><div class="seg"><button type="button" class="${a.mode!=="photo"?"on":""}" data-mode="cat">Cartoon cat</button><button type="button" class="${a.mode==="photo"?"on":""}" data-mode="photo" ${a.photo?"":"disabled"}>My photo</button></div>
  <label>Upload a picture<input type="file" id="up" accept="image/*"></label>${a.photo?'<button type="button" class="ghost" data-rmphoto>Remove my photo</button>':""}</div>
  <h2>Customize your cat</h2><div class="set"><b>Fur</b><div class="sw">${sw(FUR,"fur",a.fur)}</div><b>Eyes</b><div class="sw">${sw(EYE,"eyes",a.eyes)}</div><b>Pattern</b><div class="seg">${opt(["Plain","Stripes","Patch","Muzzle"],"pat",a.pat)}</div><b>Accessory</b><div class="seg">${opt(["None","Bow","Crown","Glasses","Hat"],"acc",a.acc)}</div><button type="button" class="ghost" data-rand>Surprise me</button></div>
- <h2>Display</h2><div class="set"><label class="t"><input type="checkbox" id="showav" ${showAv()?"checked":""}>Show profile pictures in chat</label><div class="seg" role="group" aria-label="Theme">${["system","light","dark"].map(t=>`<button type="button" class="${(ls.get("meow-theme")||"system")===t?"on":""}" data-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>`;
+ <h2>Display</h2><div class="set"><label class="t"><input type="checkbox" id="showav" ${showAv()?"checked":""}>Show profile pictures in chat</label><div class="seg" role="group" aria-label="Theme">${["system","light","dark"].map(t=>`<button type="button" class="${(ls.get("meow-theme")||"system")===t?"on":""}" data-theme="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div></div>
+ <h2>Delete account</h2><form id="delf" class="set"><input name="pw" type="password" placeholder="Your password" required><button class="bad">Delete my account</button><small style="color:var(--mute)">This wipes your account, cats, listings and messages. The admin account can’t be deleted.</small></form>`;
 }
 async function saveAv(patch){
  const m=me();if(!m)return;
@@ -266,43 +519,107 @@ $("#p-settings").onchange=e=>{
  if(e.target.id==="showav"){ls.set("meow-showav",e.target.checked?"1":"0");applyAv()}
  else if(e.target.id==="up"){
   const f=e.target.files[0];if(!f||!f.type.startsWith("image/"))return toast("Choose an image file");
-  const rd=new FileReader();rd.onload=()=>{const img=new Image();img.onload=()=>{
-   const c=document.createElement("canvas");c.width=c.height=96;const s=Math.min(img.width,img.height);
-   c.getContext("2d").drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,96,96);
-   saveAv({mode:"photo",photo:c.toDataURL("image/jpeg",.8)});
-  };img.onerror=()=>toast("Couldn’t read that image");img.src=rd.result};rd.readAsDataURL(f);
+  fileToPic(f,96).then(({url})=>saveAv({mode:"photo",photo:url})).catch(()=>toast("Couldn’t read that image"));
  }
 };
-$("#p-wallet").onclick=async e=>{
- if(!("daily" in e.target.dataset))return;
- try{await api("daily");toast("+50 coins")}catch(x){}
+$("#p-settings").onsubmit=async e=>{
+ e.preventDefault();if(e.target.id!=="delf")return;
+ const pw=new FormData(e.target).get("pw");
+ if(!confirm("Delete your account forever?"))return;
+ try{await api("deleteMe",{pw});logoutLocal();location.reload()}catch(x){}
 };
 
+/* ---------- admin ---------- */
+function abilOpts(sel){return `<option value="0">no attack</option>`+Object.values(items).filter(i=>i.kind==="ability").map(i=>`<option value="${i.id}" ${sel===i.id?"selected":""}>${esc(i.name)} (${i.dmg})</option>`).join("")}
+function catOpts(sel,ph){return `<option value="">${ph||"Pick a cat…"}</option>`+cats.map(c=>`<option value="${c.id}" ${sel===c.id?"selected":""}>${esc(c.name)} (${c.hp} HP)</option>`).join("")}
 function renderAdmin(){
  const box=$("#p-admin");if(!isAdmin()){box.innerHTML="";return}
- if(box.contains(document.activeElement)&&document.activeElement.tagName==="INPUT")return;
+ if(box.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
  const ps=Object.entries(players).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+ const itemRows=Object.entries(items).map(([id,i])=>`<div class="card"><div class="e">${i.img?`<img class="pic" alt="" src="${esc(i.img)}">`:esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b>${i.kind!=="normal"?pill(i.kind):""}${i.kind==="ability"?pill(i.atype||""):""}${saleOn(i)?'<span class="tag sale">SALE</span>':""}<small>🪙 ${saleOn(i)?effP(i)+" (was "+i.price+")":i.price}${i.seller?` · player listing`:` · ${i.stock>0?i.stock+" in stock":"unlimited"}`}</small></div><button class="bad sm" data-rm="${id}">Remove from shop</button></div>`).join("")||'<div class="empty">No items.</div>';
  box.innerHTML=`<h2>Add shop item</h2>
- <form id="af" class="card" style="display:grid;gap:.5rem"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div>
- <input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="1" placeholder="Price" required><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div><button>Add item</button></form>
- <h2>Items</h2>${Object.entries(items).map(([id,i])=>`<div class="card"><div class="e">${esc(i.emoji||"🎁")}</div><div class="i"><b>${esc(i.name)}</b><small>🪙 ${i.price}</small></div><button class="bad" data-rm="${id}">Remove</button></div>`).join("")||'<div class="empty">No items.</div>'}
- <h2>Players</h2>${ps.map(([id,p])=>{const R=meId===ROOT,self=id===ROOT;return `<div class="card" style="flex-wrap:wrap"><div class="i"><b>${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}${p.banned?'<span class="tag" style="background:var(--danger);color:#fff">banned</span>':""}<small>🪙 ${self?"∞":p.coins}</small></div>${self?"":`<button class="ghost" data-adm="${id}">${p.admin?"Remove admin":"Make admin"}</button>`}${R&&!self?`<div class="row" style="flex-basis:100%"><input type="number" placeholder="Coins (− takes)" data-amt="${id}"><button data-give="${id}">Give</button><button class="${p.banned?"ghost":"bad"}" data-ban="${id}">${p.banned?"Unban":"Ban"}</button></div>`:""}</div>`}).join("")}
- ${meId===ROOT?`<h2>Banned names</h2>${(me().blocked&&me().blocked.length)?me().blocked.map(id=>`<div class="card"><div class="i"><b>${esc(id)}</b><small>Banned from signing up</small></div><button class="ghost" data-unban="${esc(id)}">Unban</button></div>`).join(""):'<div class="empty">Nobody is banned.</div>'}`:""}
+ <form id="af" class="set"><div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Item name" required maxlength="40"></div>
+ <div class="row"><label class="t">Picture <input type="file" id="itemfile" accept="image/*"></label><select name="kind"><option value="normal">Normal</option><option value="physical">Physical</option><option value="fun">Fun</option><option value="ability">Ability</option></select></div>
+ <div class="row"><input name="dmg" type="number" min="1" placeholder="Damage (abilities)"><input name="atype" placeholder="Type e.g. fire" maxlength="12"></div>
+ <input name="desc" placeholder="Description" maxlength="80"><div class="row"><input name="price" type="number" min="0" placeholder="Price (0 = free)" required><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div><button>Add item</button></form>
+ <h2>Items</h2>${itemRows}
+ <h2>Create a cat</h2><form id="cf" class="set">
+ <div class="row"><input name="name" placeholder="Cat name" required maxlength="40"><input name="hp" type="number" min="1" max="9999" placeholder="HP (like 50)"></div>
+ <div class="row"><input name="price" type="number" min="0" placeholder="Price (0 = free)"><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div>
+ <div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><label class="t">Picture <input type="file" id="catfile" accept="image/*"></label></div>
+ <div class="row"><select name="type1"><option value="normal">normal</option><option value="fire">fire</option><option value="water">water</option><option value="poison">poison</option></select><select name="type2"><option value="">no 2nd type</option><option value="normal">normal</option><option value="fire">fire</option><option value="water">water</option><option value="poison">poison</option></select></div>
+ <input name="rarity" placeholder="Rarity (optional, type anything)" maxlength="16">
+ <div class="row"><select name="evo"><option value="0">No evolution</option>${cats.map(c=>`<option value="${c.id}">Evolves into ${esc(c.name)}</option>`).join("")}</select><input name="evolv" type="number" min="0" max="100" placeholder="Evolves at level"></div>
+ <input name="descr" placeholder="Description" maxlength="120">
+ <label class="t"><input type="checkbox" name="shop" checked> Sold in the shop</label>
+ <button>Create cat</button></form>
+ <h2>Cats</h2>${cats.map(c=>`<div class="card">${catPic(c)}<div class="i"><b>${esc(c.name)}</b> ${pill(c.type1)}${c.type2?pill(c.type2):""}${c.rarity?`<span class="pill">${esc(c.rarity)}</span>`:""}<small>${c.hp} HP · 🪙 ${c.price}${c.evo?` · evolves`:""}${c.shop?"":" · not in shop"}</small></div><button class="ghost sm" data-catshop="${c.id}">${c.shop?"Remove from shop":"Put back in shop"}</button></div>`).join("")||'<div class="empty">No cats yet.</div>'}
+ <h2>Create a pack</h2><form id="pf" class="set">
+ <div class="row"><input name="emoji" placeholder="Emoji" maxlength="4"><input name="name" placeholder="Pack name" required maxlength="40"></div>
+ <input name="descr" placeholder="Description" maxlength="120">
+ <div class="row"><input name="price" type="number" min="0" placeholder="Price (0 = free)" required><input name="stock" type="number" min="1" placeholder="Stock (blank = unlimited)"></div>
+ <div id="drops">${packDrops.map((d,k)=>`<div class="row"><select data-dt="${k}"><option value="item" ${d.t==="item"?"selected":""}>Item</option><option value="cat" ${d.t==="cat"?"selected":""}>Cat</option></select><select data-di="${k}">${d.t==="cat"?cats.map(c=>`<option value="${c.id}" ${d.id===c.id?"selected":""}>${esc(c.name)}</option>`).join(""):Object.values(items).map(i=>`<option value="${i.id}" ${d.id===i.id?"selected":""}>${esc(i.name)}</option>`).join("")}</select><input type="number" min="1" max="99" value="${d.n}" data-dn="${k}" style="max-width:70px"><input type="number" min="1" max="100" value="${d.ch}" data-dch="${k}" style="max-width:70px" title="Chance weight"><button type="button" class="ghost sm" data-dropdel="${k}">✕</button></div>`).join("")}</div>
+ <button type="button" class="ghost" id="dropadd">Add drop</button><button>Create pack</button></form>
+ <h2>Packs</h2>${packs.map(k=>`<div class="card"><div class="i"><b>${esc(k.emoji||"🎁")} ${esc(k.name)}</b><small>🪙 ${k.price} · ${(k.data||[]).length} drops</small></div><button class="bad sm" data-packrm="${k.id}">Remove</button></div>`).join("")||'<div class="empty">No packs yet.</div>'}
+ <h2>Create a wild cat</h2><form id="wf" class="set">
+ <div class="row"><select name="cat">${catOpts(0)}</select><input name="lvl" type="number" min="1" max="100" placeholder="Level" value="1"></div>
+ <div class="row">${[0,1,2,3].map(k=>`<select name="m${k}">${abilOpts(0)}</select>`).join("")}</div>
+ <small style="color:var(--mute)">Players fight it from the Battle tab and can catch it.</small><button>Create wild cat</button></form>
+ <h2>Wild cats</h2>${wilds.map(w=>{const c=cats.find(x=>x.id===w.cat);return `<div class="card"><div class="i"><b>${esc(c?c.name:"?")}</b><small>Lv ${w.lvl}</small></div><button class="bad sm" data-wildrm="${w.id}">Remove</button></div>`}).join("")||'<div class="empty">No wild cats yet.</div>'}
+ <h2>Create a trainer</h2><form id="tf" class="set">
+ <div class="row"><input name="name" placeholder="Trainer name" required maxlength="40"><input name="reward" type="number" min="0" placeholder="Coin reward (first win)"></div>
+ <div id="tteams">${trainerTeams.map((t,k)=>`<div class="set"><div class="row"><select data-ttc="${k}">${catOpts(t.cat)}</select><input type="number" min="1" max="100" value="${t.lvl||1}" data-ttl="${k}" style="max-width:80px"></div><div class="row">${[0,1,2,3].map(j=>`<select data-ttm="${k}:${j}">${abilOpts((t.moves||[])[j]||0)}</select>`).join("")}</div><button type="button" class="ghost sm" data-teamdel="${k}">Remove cat</button></div>`).join("")}</div>
+ <button type="button" class="ghost" id="teamadd">Add another cat (up to 6)</button><button>Add trainer</button></form>
+ <h2>Trainers</h2>${trainers.map(t=>`<div class="card"><div class="i"><b>${esc(t.name)}</b><small>${(t.team||[]).length} cats · 🪙 ${t.reward} first-win</small></div><button class="bad sm" data-trainerrm="${t.id}">Remove</button></div>`).join("")||'<div class="empty">No trainers yet.</div>'}
+ <h2>Players</h2>${ps.map(([id,p])=>{const R=meId===ROOT,self=id===ROOT;return `<div class="card" style="flex-wrap:wrap"><div class="i"><b>${esc(p.name)}</b>${p.admin?'<span class="tag">admin</span>':""}${p.banned?'<span class="tag" style="background:var(--danger);color:#fff">banned</span>':""}<small>🪙 ${self?"∞":p.coins}</small></div>${self?"":`<button class="ghost sm" data-adm="${id}">${p.admin?"Remove admin":"Make admin"}</button>`}${R&&!self?`<div class="row" style="flex-basis:100%"><input type="number" placeholder="Coins (− takes)" data-amt="${id}"><button class="sm" data-give="${id}">Give</button><button class="${p.banned?"ghost":"bad"} sm" data-ban="${id}">${p.banned?"Unban":"Ban"}</button></div>`:""}</div>`}).join("")}
+ ${meId===ROOT?`<h2>Banned names</h2>${(me().blocked&&me().blocked.length)?me().blocked.map(id=>`<div class="card"><div class="i"><b>${esc(id)}</b><small>Banned from signing up</small></div><button class="ghost sm" data-unban="${esc(id)}">Unban</button></div>`).join(""):'<div class="empty">Nobody is banned.</div>'}`:""}
+ <h2>Banned username words</h2><form id="wf2" class="set"><div class="row"><input name="word" placeholder="Word to block in usernames" maxlength="16" required><button class="sm">Ban word</button></div></form>
+ ${(me().words||[]).map(w=>`<div class="card"><div class="i"><b>${esc(w)}</b></div><button class="ghost sm" data-wordrm="${esc(w)}">Remove</button></div>`).join("")||'<div class="empty">No banned words.</div>'}
  <h2>Chat</h2><button class="bad" data-clear>Clear all messages</button>`;
 }
-$("#p-admin").onsubmit=async e=>{
- e.preventDefault();if(!isAdmin())return;const f=new FormData(e.target);
- try{await api("item/add",{name:f.get("name"),emoji:f.get("emoji"),desc:f.get("desc"),price:f.get("price"),stock:f.get("stock")});e.target.reset();toast("Item added")}catch(x){}
-};
+let adminImg="";
 $("#p-admin").onclick=async e=>{
  if(!isAdmin())return;const d=e.target.dataset;
  try{
   if(d.rm)await api("item/remove",{id:d.rm});
+  else if(d.packrm)await api("pack/remove",{id:d.packrm});
+  else if(d.wildrm)await api("wild/remove",{id:d.wildrm});
+  else if(d.trainerrm)await api("trainer/remove",{id:d.trainerrm});
+  else if(d.catshop)await api("cat/shop",{id:d.catshop});
+  else if(d.wordrm)await api("word/remove",{word:d.wordrm});
   else if(d.adm)await api("admin/promote",{to:d.adm});
   else if(d.give&&meId===ROOT){const n=parseInt(document.querySelector(`[data-amt="${d.give}"]`).value);if(!n)return toast("Enter an amount");await api("admin/give",{to:d.give,n})}
   else if(d.ban&&meId===ROOT)await api("admin/ban",{to:d.ban});
   else if(d.unban&&meId===ROOT){await api("admin/unban",{to:d.unban});toast("Unbanned "+d.unban)}
+  else if(d.dropdel!==undefined){packDrops=readDrops();packDrops.splice(+d.dropdel,1);renderAdmin()}
+  else if(e.target.id==="dropadd"){packDrops=readDrops();packDrops.push({t:"item",id:+Object.keys(items)[0]||0,n:1,ch:1});renderAdmin()}
+  else if(d.teamdel!==undefined){trainerTeams=readTeams();trainerTeams.splice(+d.teamdel,1);renderAdmin()}
+  else if(e.target.id==="teamadd"){trainerTeams=readTeams();if(trainerTeams.length>=6)return toast("Max 6 cats");trainerTeams.push({cat:cats[0]?cats[0].id:0,lvl:1,moves:[0,0,0,0]});renderAdmin()}
   else if("clear" in d){const b=e.target;if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Click again to delete everything";setTimeout(()=>{b.dataset.sure="";b.textContent="Clear all messages"},3000)}else await api("admin/clear")}
+ }catch(x){}
+};
+function readDrops(){
+ return[...document.querySelectorAll("#drops [data-dt]")].map((s,k)=>({t:s.value,id:+document.querySelector(`[data-di="${k}"]`).value,n:+document.querySelector(`[data-dn="${k}"]`).value||1,ch:+document.querySelector(`[data-dch="${k}"]`).value||1}));
+}
+function readTeams(){
+ return[...document.querySelectorAll("#tteams [data-ttc]")].map((s,k)=>({cat:+s.value,lvl:+document.querySelector(`[data-ttl="${k}"]`).value||1,moves:[0,1,2,3].map(j=>+document.querySelector(`[data-ttm="${k}:${j}"]`).value||0)}));
+}
+$("#p-admin").onchange=e=>{
+ if(e.target.id==="itemfile"||e.target.id==="catfile"){
+  const f=e.target.files[0];if(!f)return;
+  fileToPic(f,128).then(({url})=>{adminImg=url;toast("Picture attached")}).catch(()=>toast("Couldn’t read that image"));
+ }
+ if(e.target.dataset&&e.target.dataset.dt!==undefined){e.target.blur();packDrops=readDrops();renderAdmin()}
+};
+$("#p-admin").onsubmit=async e=>{
+ e.preventDefault();if(!isAdmin())return;const f=new FormData(e.target);
+ try{
+  if(e.target.id==="af"){await api("item/add",{name:f.get("name"),emoji:f.get("emoji"),img:adminImg,desc:f.get("desc"),price:f.get("price"),stock:f.get("stock"),kind:f.get("kind"),dmg:f.get("dmg"),atype:f.get("atype")});adminImg="";e.target.reset();toast("Item added")}
+  else if(e.target.id==="cf"){await api("cat/add",{name:f.get("name"),hp:f.get("hp"),price:f.get("price"),stock:f.get("stock"),emoji:f.get("emoji"),img:adminImg,type1:f.get("type1"),type2:f.get("type2"),rarity:f.get("rarity"),evo:f.get("evo"),evolv:f.get("evolv"),descr:f.get("descr"),shop:f.get("shop")?"1":"0"});adminImg="";e.target.reset();toast("Cat created")}
+  else if(e.target.id==="pf"){await api("pack/add",{name:f.get("name"),emoji:f.get("emoji"),descr:f.get("desc"),price:f.get("price"),stock:f.get("stock"),data:readDrops()});packDrops=[];e.target.reset();toast("Pack created")}
+  else if(e.target.id==="wf"){await api("wild/add",{cat:f.get("cat"),lvl:f.get("lvl"),moves:[f.get("m0"),f.get("m1"),f.get("m2"),f.get("m3")]});e.target.reset();toast("Wild cat released")} 
+  else if(e.target.id==="tf"){await api("trainer/add",{name:f.get("name"),reward:f.get("reward"),team:readTeams()});trainerTeams=[];e.target.reset();toast("Trainer added")}
+  else if(e.target.id==="wf2"){await api("word/add",{word:f.get("word")});e.target.reset();toast("Word banned")}
  }catch(x){}
 };
 </script>
